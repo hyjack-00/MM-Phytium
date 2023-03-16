@@ -9,7 +9,7 @@
 #include <arm_neon.h>
 #include <omp.h>
 
-#include "microkernerls.h"
+#include "microkernels.h"
 
 using std::string;
 using std::cout;
@@ -58,7 +58,26 @@ void rand_mat_f32(float *mat, int length_1d, unsigned int seed) {
         mat[i] = ((float)rand() / ((float)RAND_MAX / (RAND_UB - RAND_LB))) + RAND_LB;
 }
 
+#define Ti 128
+#define Tj 128
+#define Tk 128
+#define MIN(x,y) (((x)<(y))?(x):(y))
+void outer_kernel(int32_t *A, int32_t *B, int32_t *C
+                  size_t ni, size_t nj, size_t nk) {
+    // packing...
 
+    #pragma omp parallel for
+    for (int i0 = 0; i0 < ni; i0 += Ti) {
+        int i1 = MIN(ni, i0+Ti);
+        for (int j0 = 0; j0 < nj; j0 += Tj) {
+            int j1 = MIN(nj, j0+Tj);
+            for (int k0 = 0; k0 < nk; k0 += Tk) {
+                int k1 = MIN(nk, k0+Tk);
+
+            }
+        }
+    }
+}
 
 int main() {
     const int input_loop = 10;
@@ -84,7 +103,7 @@ int main() {
             rand_mat_s32(C, ni * nj, 1357);
             auto start = Clock::now();
 
-            hello();
+            outer_kernel(A, B, C, ni, nj, nk);
 
             auto end = Clock::now();
             double dur = Dur(start, end);

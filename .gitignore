@@ -3,6 +3,3 @@ build
 bin
 input
 output
-
-run.sh
-build.sh

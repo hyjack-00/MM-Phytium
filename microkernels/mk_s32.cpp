@@ -1,5 +1,2 @@
-#include "microkernerls.h"
+#include "microkernels.h"
 
-void hello() {
-    printf("hello\n");
-}
