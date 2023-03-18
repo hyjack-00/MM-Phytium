@@ -50,10 +50,10 @@ void print_mat(T *mat, int ni, int nj) {
 template <typename T>
 void naive(T *A, T *B, T *C, size_t ni, size_t nj, size_t nk) {
     #pragma omp parallel for collapse(2)
-    for (int i = 0; i < ni; i ++) {
-        for (int j = 0; j < nj; j ++) {
+    for (size_t i = 0; i < ni; i ++) {
+        for (size_t j = 0; j < nj; j ++) {
             T cij = 0;
-            for (int k = 0; k < nk; k ++) {
+            for (size_t k = 0; k < nk; k ++) {
                 cij += A[i*nk + k] * B[k*nj + j];
             }
             C[i*nj + j] = cij;
@@ -84,27 +84,27 @@ void rand_mat_f32(float *mat, int length_1d, unsigned int seed) {
 #define Tj 128
 #define Tk 128
 #define MIN(x,y) (((x)<(y))?(x):(y))
-void outer_kernel(int32_t *A, int32_t *B, int32_t *C
+void outer_kernel(int32_t *A, int32_t *B, int32_t *C,
                   size_t ni, size_t nj, size_t nk) {
     // packing...
 
     // #pragma omp parallel for
-    for (int i0 = 0; i0 < ni; i0 += Ti) {
-        int i1 = MIN(ni, i0+Ti);
-        for (int j0 = 0; j0 < nj; j0 += Tj) {
-            int j1 = MIN(nj, j0+Tj);
-            for (int k0 = 0; k0 < nk; k0 += Tk) {
-                int k1 = MIN(nk, k0+Tk);
-                
-                mks32_0(A+i*nk+k, B+k*nj+j, C+i*nj+j, i1, j1, k1, nk, nj);
+    for (size_t i0 = 0; i0 < ni; i0 += Ti) {
+        size_t i1 = MIN(ni, i0+Ti);
+        for (size_t j0 = 0; j0 < nj; j0 += Tj) {
+            size_t j1 = MIN(nj, j0+Tj);
+            for (size_t k0 = 0; k0 < nk; k0 += Tk) {
+                size_t k1 = MIN(nk, k0+Tk);
+                OS << "hint " << i0 << " " << j0 << " " << k0 << endl;
+                mks32_0(A+i0*nk+k0, B+k0*nj+j0, C+i0*nj+j0, i1, j1, k1, nk, nj);
             }
         }
     }
 }
 
 int main() {
-    const int input_loop = 10;
-    const int compute_loop = 10;
+    const int input_loop = 2;
+    const int compute_loop = 2;
     const int ni = 1024, nj = 1024, nk = 1024;
 
     int32_t *A = (int32_t *) malloc(sizeof(int32_t) * ni * nk);
@@ -118,7 +118,7 @@ int main() {
     OS << "Test start" << endl;
     OS << "Loop: " << input_loop << "x" << compute_loop
        << ", Size: i" << ni << " j" << nj << " k" << nk << endl;
-    OS << "Enable C answer check? " << ANS_CHECK << endl;
+    OS << "Enable C answer check? " << (bool)ANS_CHECK << endl;
     #if FILE_OUTPUT == true
     cout << "File output: " << ouput_file << endl; 
     #endif
@@ -143,24 +143,24 @@ int main() {
             total_time1 += dur; 
             OS << "compute time: " << dur << " secs" << endl;
         }
-        OS << "  avg time1: " << total_time1/compute_loop << " secs (for this input)" << endl;
+        OS << "  avg time1: " << total_time1/compute_loop << " secs for input: " << input << endl;
         total_time2 += total_time1;
 
-        { // 对比
-            rand_mat_s32(D, ni * nj, 1357);
-            auto start = Clock::now();
+        // { // 对比
+        //     rand_mat_s32(D, ni * nj, 1357);
+        //     auto start = Clock::now();
 
-            naive(A, B, D, ni, nj, nk);
+        //     naive(A, B, D, ni, nj, nk);
 
-            auto end = Clock::now();
-            double dur = Dur(start, end);
-            dur /= 1000000.0;
-            OS << "  base time: " << dur << " secs" << endl;
+        //     auto end = Clock::now();
+        //     double dur = Dur(start, end);
+        //     dur /= 1000000.0;
+        //     OS << "  base time: " << dur << " secs" << endl;
 
-            #if ANS_CHECK == true
-                ans_check_s32(C, D, ni, nj);
-            #endif
-        }
+        //     #if ANS_CHECK == true
+        //         ans_check_s32(C, D, ni, nj);
+        //     #endif
+        // }
     }
     OS << "    total avg time2: " << total_time2/input_loop << " secs" << endl;
 
