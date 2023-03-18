@@ -60,13 +60,13 @@ void mks32_0(
 }
 
 
-// NEON example: load B
+// NEON example: load B, fetch C
 #define s32_444lBfC_vA(k) \
     vA[k] = vld1q_s32(A + a + LDA*k); \
-    vC[k] = vmlaq_laneq_s32(vC[k], vB[0], vA[k], 0); \
-    vC[k] = vmlaq_laneq_s32(vC[k], vB[1], vA[k], 1); \
-    vC[k] = vmlaq_laneq_s32(vC[k], vB[2], vA[k], 2); \
-    vC[k] = vmlaq_laneq_s32(vC[k], vB[3], vA[k], 3); 
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[k], vA[0], k); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[k], vA[1], k); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[k], vA[2], k); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[k], vA[3], k);
 
 void mks32_4x4k4_ldB_fchC(
     const int32_t *A, const int32_t *B, int32_t *C,
@@ -103,4 +103,58 @@ void mks32_4x4k4_ldB_fchC(
             vst1q_s32(C + c + LDBC*3, vC[3]);
         }
     }
+}
+
+// NEON example: load A, fetch C
+#define s32_444lAfC_vB(k) \
+    vB[k] = vld1q_s32(B + b + LDBC*k); \
+    vC[0] = vmlaq_laneq_s32(vC[0], vA[0], vB[k], 0); \
+    vC[1] = vmlaq_laneq_s32(vC[1], vA[1], vB[k], 1); \
+    vC[2] = vmlaq_laneq_s32(vC[2], vA[2], vB[k], 2); \
+    vC[3] = vmlaq_laneq_s32(vC[3], vA[3], vB[k], 3); 
+
+void mks32_4x4k4_ldB_fchC(
+    const int32_t *A, const int32_t *B, int32_t *C,
+    size_t ni, size_t nj, size_t nk,
+    size_t LDA, size_t LDBC) 
+{
+    size_t a, b, c;
+    int32x4_t vA[4], vB[4], vC[4];
+
+    for (int i = 0; i < ni; i += 4) {
+        for (int j = 0; j < nj; j += 4) {
+            vC[0] = vld1q_s32(C + c + LDBC*0);
+            vC[1] = vld1q_s32(C + c + LDBC*1);
+            vC[2] = vld1q_s32(C + c + LDBC*2);
+            vC[3] = vld1q_s32(C + c + LDBC*3);
+
+            for (int k = 0; k < nk; k += 4) {
+                a = i*LDA + k;
+                b = k*LDBC + j;
+                vA[0] = vld1q_s32(A + a + LDA*0);
+                vA[1] = vld1q_s32(A + a + LDA*1);
+                vA[2] = vld1q_s32(A + a + LDA*2);
+                vA[3] = vld1q_s32(A + a + LDA*3);
+
+                s32_444lAfC_vB(0);
+                s32_444lAfC_vB(1);
+                s32_444lAfC_vB(2);
+                s32_444lAfC_vB(3);
+            }
+            c = i*LDBC + j;
+            vst1q_s32(C + c + LDBC*0, vC[0]);
+            vst1q_s32(C + c + LDBC*1, vC[1]);
+            vst1q_s32(C + c + LDBC*2, vC[2]);
+            vst1q_s32(C + c + LDBC*3, vC[3]);
+        }
+    }
+}
+
+
+void mks32_4x8k8_ldB_fchC(
+    const int32_t *A, const int32_t *B, int32_t *C,
+    size_t ni, size_t nj, size_t nk,
+    size_t LDA, size_t LDBC) 
+{
+    
 }
