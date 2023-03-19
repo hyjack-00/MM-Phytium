@@ -5,10 +5,19 @@
 #include <vector>
 #include <iostream>
 #include <random>
+#include <map>
+#include <unordered_map>
 using namespace std;
 
 typedef unsigned int uint;
 typedef const unsigned int cui;
+
+template<typename tp>
+vector<tp>* init_with_reserve(uint size) {
+	vector<tp>* a = new vector<tp>;
+	a->reserve(size);
+	return a;
+}
 
 //注意：rd()是一个无符号整数
 template<typename tp>
@@ -109,13 +118,13 @@ struct dc_sparce_matrix {
 
 	dc_sparce_matrix() {
 		trans = 0;
-		data = new vector<tp>;
-		row_index = new vector<uint>;
-		col_range = new vector<uint>;
-		col_index = new vector<uint>;
+		data = nullptr;
+		row_index = nullptr;
+		col_range = nullptr;
+		col_index = nullptr;
 	}
 
-	// init from a dense matrix
+	// init from a normal dense matrix
 	dc_sparce_matrix(const sparce_matrix<tp>& a) {
 		data = new vector<tp>(a.data->begin(), a.data->end());
 		row_index = new vector<uint>(a.row_index->begin(), a.row_index->end());
@@ -129,21 +138,126 @@ struct dc_sparce_matrix {
 				col_index->push_back(i);
 			}
 		}
+		data->shrink_to_fit();
+		row_index->shrink_to_fit();
+		col_range->shrink_to_fit();
+		col_index->shrink_to_fit();
 	}
 
-	void transpose() {
+	// init from a double conpressed matrix. 
+	// notice: "transpose == 1" means you want to store this matrix in a different form, but the two are logically equal.
+	dc_sparce_matrix(const dc_sparce_matrix<tp>& a, const bool& transpose = false) {
+		if (transpose) {
+			data = new vector<tp>(a.nnz(), 0);
+			trans = !a.trans;
+			row_index = new vector<uint>(a.nnz(), 0);
 
+			//创建一些临时数组
+			map<uint, uint>* num = new map<uint, uint>;
+			for (uint ri = 0; ri < a.nnz(); ri++) {
+				if (num->find(a.row_index->at(ri)) == num->end()) {
+					num->insert(pair<uint,uint>(a.row_index->at(ri), 1));
+				}
+				else {
+					num->at(a.row_index->at(ri)) += 1;
+				}
+			}
+			col_index = init_with_reserve<uint>(num->size());
+			col_range = init_with_reserve<uint>(num->size() + 1);
+			unordered_map<uint, uint>* col_now = new unordered_map<uint, uint>;//这个是为了等会记录每个data插入的位置。
+			col_range->push_back(0);
+			for (auto it = num->begin(); it != num->end(); it++) {
+				col_now->insert(pair<uint, uint>(it->first, col_range->back()));
+				col_index->push_back(it->first);
+				col_range->push_back(col_range->back() + it->second);
+				
+			}
+			
+			//插入data
+			for (uint col = 0; col < a.col_index->size(); col++) {
+				for (uint row = a.col_range->at(col); row < a.col_range->at(col + 1); row++) {
+					data->at(col_now->at(a.row_index->at(row))) = a.data->at(row);
+					row_index->at(col_now->at(a.row_index->at(row))) = a.col_index->at(col);
+					col_now->at(a.row_index->at(row))++;
+				}
+			}
+		}
+		else {
+			data = new vector<tp>(a.data->begin(), a.data->end());
+			trans = a.trans;
+			row_index = new vector<uint>(a.row_index->begin(), a.row_index->end());
+			col_range = new vector<uint>(a.col_range->begin(), a.col_range->end());
+			col_index = new vector<uint>(a.col_index->begin(), a.col_index->end());
+		}
 	}
 
-	unsigned int nnz() {
+	//通过输入的符合字典序的坐标三元组构建。注意：会改变begin的所指
+	template<class InputIterator>
+	dc_sparce_matrix(InputIterator begin, InputIterator end, const bool& transpose = false) {
+		trans = transpose;
+		if (trans) {
+			data = new vector<tp>;
+			row_index = new vector<uint>;
+			col_range = new vector<uint>;
+			col_index = new vector<uint>;
+			uint index = (*begin)->row;
+			col_range->push_back(0);
+			col_index->push_back(index);
+			for (auto i = begin; i != end; i++) {
+				if ((*i)->row != index) {
+					index = (*i)->row;
+					col_index->push_back((*i)->row);
+					col_range->push_back(data->size());
+				}
+				row_index->push_back((*i)->col);
+				data->push_back((*i)->data);
+			}
+			col_range->push_back(data->size());
+		}
+		else {
+			data = new vector<tp>;
+			row_index = new vector<uint>;
+			col_range = new vector<uint>;
+			col_index = new vector<uint>;
+			uint index = (*begin)->col;
+			col_range->push_back(0);
+			col_index->push_back(index);
+			for (auto i = begin; i != end; i++) {
+				if ((*i)->col != index) {
+					index = (*i)->col;
+					col_index->push_back((*i)->col);
+					col_range->push_back(data->size());
+				}
+				row_index->push_back((*i)->row);
+				data->push_back((*i)->data);
+			}
+			col_range->push_back(data->size());
+		}
+		data->shrink_to_fit();
+		row_index->shrink_to_fit();
+		col_range->shrink_to_fit();
+		col_index->shrink_to_fit();
+	}
+
+	unsigned int nnz() const {
 		return data->size();
 	}
 
-	unsigned int nzc() {
+	unsigned int nzc() const {
 		return col_index->size();
 	}
 
-	~dc_sparce_matrix() {}
+	void transpose() const {
+		!trans;
+		return;
+	}
+
+	~dc_sparce_matrix() {
+		delete data;
+		delete row_index;
+		delete col_index;
+		delete col_range;
+	}
 
 	friend ostream& operator<<(ostream& output, const dc_sparce_matrix& a)
 	{

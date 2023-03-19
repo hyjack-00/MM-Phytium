@@ -12,6 +12,13 @@
 typedef unsigned int uint;
 typedef const unsigned int cui;
 
+// 这个表格是用来查询乘法前应做什么操作，包括是否转置，是否调换AB。以转置最少为目标。
+bool Atrans[8] = { 1,0,0,0,0,0,0,1 };
+bool Btrans[8] = { 0,1,0,0,0,0,1,0 };
+bool Ctrans[8] = { 0,0,1,0,0,1,0,0 };
+bool ABswap[8] = { 1,0,0,0,1,1,1,0 };
+
+
 template<typename tp>
 struct Cord {
 	uint row, col, sign;//sign是为了在merge的时候，提示这个元素来自哪次结果
@@ -26,7 +33,7 @@ struct cmp {
 		reverse = revparam;
 	}
 	bool operator() (const Cord<tp>* lhs, const Cord<tp>* rhs) const {
-		if (lhs->col > rhs->col || (lhs->col == rhs->col && lhs->row > rhs->row) || (lhs->col == rhs->col && lhs->row == rhs->row && lhs->data > rhs->data)) {
+		if (lhs->row > rhs->row || (lhs->row == rhs->row && lhs->col > rhs->col)) {
 			return !reverse;
 		}
 		else {
@@ -40,11 +47,44 @@ bool is_equal(const Cord<tp>* a, const Cord<tp>* b) {
 	return (a->col == b->col && a->row == b->row);
 }
 
-//这里假定ABC是列，行，列优先，并且C的数据作废。
+//这里假定ABC是列，行，行优先
+//注意：目前的版本下，调用本函数之后，C作为一个指针会改变其所指的位置。这可能有所不妥？\
+//当前版本下，一次乘法可能需要四次转换存储方式。可能有更好的方法。
 template<typename tp>
-void mult(dc_sparce_matrix<tp>* A, dc_sparce_matrix<tp>* B, dc_sparce_matrix<tp>* C) {
-	assert(A->trans == 0 && B->trans == 1 && C->trans == 1);
+void gemm(dc_sparce_matrix<tp>* _A, dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>*& _C) {
+	// 预处理
+	dc_sparce_matrix<tp>* A, * B, * C;
+	if (_A->trans) {
+		A = new dc_sparce_matrix(*_A, 1);
+	}
+	else {
+		A = _A;
+	}
+	if (!_B->trans) {
+		B = new dc_sparce_matrix(*_B, 1);
+	}
+	else {
+		B = _B;
+	}
+	if (!_C->trans) {
+		C = new dc_sparce_matrix(*_C, 1);
+	}
+	else {
+		C = _C;
+	}
+	assert(!A->trans && B->trans && C->trans);
 	vector<queue<Cord<tp>*>*>* mid_results = new vector<queue<Cord<tp>*>*>;
+
+	//先把C里的值输进去，最后加
+	queue<Cord<tp>*>* c_ele = new queue<Cord<tp>*>;
+	for (uint col = 0; col < C->col_index->size(); col++) {
+		for (uint row = C->col_range->at(col); row < C->col_range->at(col + 1); row++) {
+			Cord<tp>* a = new Cord<tp>(C->col_index->at(col), C->row_index->at(row), C->data->at(row), 0);
+			c_ele->push(a);
+		}
+	}
+	mid_results->push_back(c_ele);
+
 	uint a = 0, b = 0;//逻辑指针
 	while (a != A->nzc() && b != B->nzc()) {
 		if ((*(A->col_index))[a] == (*(B->col_index))[b]) {
@@ -53,7 +93,7 @@ void mult(dc_sparce_matrix<tp>* A, dc_sparce_matrix<tp>* B, dc_sparce_matrix<tp>
 			//生成A的一列和B的一列乘出来的笛卡尔积。
 			for (uint i = (*(A->col_range))[a]; i < (*(A->col_range))[a + 1]; i++) {
 				for (uint j = (*(B->col_range))[b]; j < (*(B->col_range))[b + 1]; j++) {
-					Cord<tp>* a = new Cord(A->row_index->at(i), B->row_index->at(j), (A->data->at(i) * B->data->at(j)), mid_results->size() - 1);
+					Cord<tp>* a = new Cord(A->row_index->at(i), B->row_index->at(j), (A->data->at(i) * B->data->at(j)), mid_results->size()-1);
 					desc_res->push(a);
 				}
 			}
@@ -67,9 +107,6 @@ void mult(dc_sparce_matrix<tp>* A, dc_sparce_matrix<tp>* B, dc_sparce_matrix<tp>
 			a++;
 		}
 	}
-
-	//空的就直接返回了，否则装到C里会出一些问题
-	if (mid_results->empty()) return;
 
 	priority_queue<Cord<tp>*, vector<Cord<tp>*>, cmp<tp>> compare_result;
 	deque<Cord<tp>*> final_result;
@@ -94,24 +131,20 @@ void mult(dc_sparce_matrix<tp>* A, dc_sparce_matrix<tp>* B, dc_sparce_matrix<tp>
 		}
 	}
 
-	//把deque里的数据装到C里。
-	C->data = new vector<tp>;
-	C->row_index = new vector<uint>;
-	C->col_range = new vector<uint>;
-	C->col_index = new vector<uint>;
-	uint index = final_result.front()->row;
-	C->col_range->push_back(0);
-	C->col_index->push_back(index);
-	for (auto i = final_result.begin(); i != final_result.end(); i++) {
-		if ((*i)->row != index) {
-			index = (*i)->row;
-			C->col_index->push_back((*i)->row);
-			C->col_range->push_back(C->data->size());
-		}
-		C->row_index->push_back((*i)->col);
-		C->data->push_back((*i)->data);
+	if (_A != A) delete A;
+	if (_B != B) delete B;
+	if (_C != C) delete C;
+
+	//把deque里的数据装到_C里。这里会导致_C被改位置。可能没有保持位置的必要，所以先写成这样.
+	dc_sparce_matrix<tp>* C1 = new dc_sparce_matrix<tp>(final_result.begin(), final_result.end(), 1);
+	if (_C->trans) {
+		delete _C;
+		_C = C1;
+	}else{
+		delete _C;
+		_C = new dc_sparce_matrix<tp>(*C1, 1);
+		delete C1;
 	}
-	C->col_range->push_back(C->data->size());
 	return;
 }
 
