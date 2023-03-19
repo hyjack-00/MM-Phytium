@@ -20,7 +20,7 @@ typedef std::chrono::high_resolution_clock Clock;
 #define FILE_OUTPUT false  // 是否输出从 stdout 到 文件
 #define ANS_CHECK true  // 是否进行答案检查
 
-string ouput_file = "output/output.dat";
+string ouput_file = "../output/output.dat";
 #if FILE_OUTPUT == true
     #define OS ofs
     std::ofstream ofs;
@@ -35,7 +35,7 @@ string ouput_file = "output/output.dat";
 template <typename T>
 void print_mat(T *mat, int ni, int nj) {
     std::ofstream fout;
-    fout.open("output/matrix.dat");
+    fout.open("../output/matrix.dat");
     if (!fout.is_open()) {
         cout << "Error opening file for result" << endl;
         exit(1);

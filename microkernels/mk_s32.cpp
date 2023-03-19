@@ -25,7 +25,7 @@ void mks32_0(
                 B1 = vld1q_s32(B + b + LDBC*1);
                 B2 = vld1q_s32(B + b + LDBC*2);
                 B3 = vld1q_s32(B + b + LDBC*3);
-
+    
                 A0 = vld1q_s32(A + a + LDA*0);
                 C0 = vmlaq_laneq_s32(C0, B0, A0, 0);
                 C0 = vmlaq_laneq_s32(C0, B1, A0, 1);
