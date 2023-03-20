@@ -4,5 +4,9 @@ bin
 input
 output
 
+*.o
+*.dat
+*.txt
+
 Makefile_
 build.sh
