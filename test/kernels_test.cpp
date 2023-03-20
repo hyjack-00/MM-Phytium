@@ -109,8 +109,8 @@ void outer_kernel_packAB(
                 size_t kt = MIN(nk-k0, Tk);
                 pkA(A+i0*nk+k0, Apack, it, kt, nk);
                 pkB(B+k0*nj+j0, Bpack, kt, jt, nj);
-                // print_mat(Apack, it*kt/16, 16, "Apack");
-                // print_mat(Bpack, kt*jt/16, 16, "Bpack");
+                // print_mat(Apack, it*kt/32, 32, "Apack");
+                // print_mat(Bpack, kt*jt/64, 64, "Bpack");
                 mk(Apack, Bpack, C+i0*nj+j0, it, jt, kt, nj);
             }
         }
@@ -133,12 +133,12 @@ void outer_kernel(
     }
 }
 
-#define TEST_N 8
+#define TEST_N 1024
 
 int main() {
-    const int input_loop = 1;
-    const int compute_loop = 1;
-    // const int ni = 4, nj = 8, nk = 4;
+    const int input_loop = 10;
+    const int compute_loop = 10;
+    // const int ni = 4, nj = 8, nk = 8;
     const int ni = TEST_N, nj = TEST_N, nk = TEST_N;
 
     OS << "Test start" << endl;
@@ -158,19 +158,17 @@ int main() {
         rand_mat_s32(B, nk * nj, 5678);
         // rand_mat_s32(A, ni * nk, time(0));
         // rand_mat_s32(B, nk * nj, time(0)+1);
-        // float32_t *A = (float32_t *) malloc(sizeof(float32_t) * ni * nk);
-        // float32_t *B = (float32_t *) malloc(sizeof(float32_t) * nk * nj);
-        // float32_t *C = (float32_t *) malloc(sizeof(float32_t) * ni * nj);
-        // rand_mat_f32(A, ni * nk, 1234);
-        // rand_mat_f32(B, nk * nj, 5678);
 
         double total_time1 = 0;
         for (int compute = 0; compute < compute_loop; compute ++) {
             zeros(C, ni * nj);
             auto start = Clock::now();
 
-            outer_kernel(A, B, C, ni, nj, nk, mks32_4x8k8_ldB_fchC);
-            // outer_kernel_packAB(A, B, C, ni, nj, nk, mks32_4x4k4_ldB_fchC_pkAB, packs32_4x4k4_A, packs32_4x4k4_B);
+            // outer_kernel(A, B, C, ni, nj, nk, mks32_4x8k8_ldA_fchC);
+            outer_kernel_packAB(A, B, C, ni, nj, nk, 
+                mks32_4x8k8_ldB_fchC_pkAB, 
+                packs32_4x8k8_A,
+                packs32_4x8k8_B);
 
             auto end = Clock::now();
             double dur = Dur(start, end);
@@ -195,10 +193,10 @@ int main() {
             ans_check_s32(C, D, ni, nj);
         }
 
-        print_mat(A, ni, nk, "A");
-        print_mat(B, nk, nj, "B");
-        print_mat(C, ni, nj, "C");
-        print_mat(D, ni, nj, "D");
+        // print_mat(A, ni, nk, "A");
+        // print_mat(B, nk, nj, "B");
+        // print_mat(C, ni, nj, "C");
+        // print_mat(D, ni, nj, "D");
         free(A);
         free(B);
         free(C);
