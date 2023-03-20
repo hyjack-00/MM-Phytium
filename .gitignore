@@ -1,10 +1,13 @@
-.vscode 
-bin
+.vscode
 build
-ouput
+bin
+input
+output
 
 *.o
 *.dat
 *.txt
 
+Makefile_
+build.sh
 Makefile_
