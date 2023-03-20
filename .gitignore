@@ -1,0 +1,10 @@
+.vscode 
+bin
+build
+ouput
+
+*.o
+*.dat
+*.txt
+
+Makefile_
