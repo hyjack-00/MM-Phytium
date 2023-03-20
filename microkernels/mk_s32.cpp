@@ -1,5 +1,9 @@
 #include "microkernels.h"
 
+std::ofstream mk_ofs("output/mk_log.dat");
+
+//# Micro-Kernel
+
 // NEON example [original]
 void mks32_0(
     const int32_t *A, const int32_t *B, int32_t *C,
@@ -8,7 +12,7 @@ void mks32_0(
 {
     size_t a, b, c;
     int32x4_t A0, A1, A2, A3, B0, B1, B2, B3, C0, C1, C2, C3;
-
+    
     for (size_t i = 0; i < ni; i += 4) {
         for (size_t j = 0; j < nj; j += 4) {
             c = i*LDBC + j;
@@ -25,7 +29,7 @@ void mks32_0(
                 B1 = vld1q_s32(B + b + LDBC*1);
                 B2 = vld1q_s32(B + b + LDBC*2);
                 B3 = vld1q_s32(B + b + LDBC*3);
-    
+
                 A0 = vld1q_s32(A + a + LDA*0);
                 C0 = vmlaq_laneq_s32(C0, B0, A0, 0);
                 C0 = vmlaq_laneq_s32(C0, B1, A0, 1);
@@ -62,11 +66,11 @@ void mks32_0(
 
 // NEON example: load B, fetch C
 #define s32_444lBfC_vA(k) \
-    vA[k] = vld1q_s32(A + a + LDA*k); \
-    vC[k] = vmlaq_laneq_s32(vC[k], vB[k], vA[0], k); \
-    vC[k] = vmlaq_laneq_s32(vC[k], vB[k], vA[1], k); \
-    vC[k] = vmlaq_laneq_s32(vC[k], vB[k], vA[2], k); \
-    vC[k] = vmlaq_laneq_s32(vC[k], vB[k], vA[3], k);
+    vA = vld1q_s32(A + a + LDA*k); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[0], vA, 0); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[1], vA, 1); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[2], vA, 2); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[3], vA, 3);
 
 void mks32_4x4k4_ldB_fchC(
     const int32_t *A, const int32_t *B, int32_t *C,
@@ -74,7 +78,7 @@ void mks32_4x4k4_ldB_fchC(
     size_t LDA, size_t LDBC) 
 {
     size_t a, b, c;
-    int32x4_t vA[4], vB[4], vC[4];
+    int32x4_t vA, vB[4], vC[4];
 
     for (size_t i = 0; i < ni; i += 4) {
         for (size_t j = 0; j < nj; j += 4) {
@@ -105,30 +109,32 @@ void mks32_4x4k4_ldB_fchC(
     }
 }
 
+
 // NEON example: load A, fetch C
 #define s32_444lAfC_vB(k) \
-    vB[k] = vld1q_s32(B + b + LDBC*k); \
-    vC[0] = vmlaq_laneq_s32(vC[0], vA[0], vB[k], 0); \
-    vC[1] = vmlaq_laneq_s32(vC[1], vA[1], vB[k], 1); \
-    vC[2] = vmlaq_laneq_s32(vC[2], vA[2], vB[k], 2); \
-    vC[3] = vmlaq_laneq_s32(vC[3], vA[3], vB[k], 3); 
+    vB = vld1q_s32(B + b + LDBC*k); \
+    vC[0] = vmlaq_laneq_s32(vC[0], vB, vA[0], k); \
+    vC[1] = vmlaq_laneq_s32(vC[1], vB, vA[1], k); \
+    vC[2] = vmlaq_laneq_s32(vC[2], vB, vA[2], k); \
+    vC[3] = vmlaq_laneq_s32(vC[3], vB, vA[3], k); 
 
-void mks32_4x4k4_ldB_fchC(
+void mks32_4x4k4_ldA_fchC(
     const int32_t *A, const int32_t *B, int32_t *C,
     size_t ni, size_t nj, size_t nk,
     size_t LDA, size_t LDBC) 
 {
     size_t a, b, c;
-    int32x4_t vA[4], vB[4], vC[4];
+    int32x4_t vA[4], vB, vC[4];
 
-    for (int i = 0; i < ni; i += 4) {
-        for (int j = 0; j < nj; j += 4) {
+    for (size_t i = 0; i < ni; i += 4) {
+        for (size_t j = 0; j < nj; j += 4) {
+            c = i*LDBC + j;
             vC[0] = vld1q_s32(C + c + LDBC*0);
             vC[1] = vld1q_s32(C + c + LDBC*1);
             vC[2] = vld1q_s32(C + c + LDBC*2);
             vC[3] = vld1q_s32(C + c + LDBC*3);
 
-            for (int k = 0; k < nk; k += 4) {
+            for (size_t k = 0; k < nk; k += 4) {
                 a = i*LDA + k;
                 b = k*LDBC + j;
                 vA[0] = vld1q_s32(A + a + LDA*0);
@@ -141,7 +147,6 @@ void mks32_4x4k4_ldB_fchC(
                 s32_444lAfC_vB(2);
                 s32_444lAfC_vB(3);
             }
-            c = i*LDBC + j;
             vst1q_s32(C + c + LDBC*0, vC[0]);
             vst1q_s32(C + c + LDBC*1, vC[1]);
             vst1q_s32(C + c + LDBC*2, vC[2]);
@@ -151,10 +156,132 @@ void mks32_4x4k4_ldB_fchC(
 }
 
 
+// i4 j8 k8 
+#define s32_488lBfC_vA(k) \
+    vA[0] = vld1q_s32(A + a + LDA * k); \
+    vA[1] = vld1q_s32(A + a + LDA * k + 4); \
+    vC[2*k  ] = vmlaq_laneq_s32(vC[2*k  ], vB[0],  vA[0], 0); \
+    vC[2*k  ] = vmlaq_laneq_s32(vC[2*k  ], vB[2],  vA[0], 1); \
+    vC[2*k  ] = vmlaq_laneq_s32(vC[2*k  ], vB[4],  vA[0], 2); \
+    vC[2*k  ] = vmlaq_laneq_s32(vC[2*k  ], vB[6],  vA[0], 3); \
+    vC[2*k  ] = vmlaq_laneq_s32(vC[2*k  ], vB[8],  vA[1], 0); \
+    vC[2*k  ] = vmlaq_laneq_s32(vC[2*k  ], vB[10], vA[1], 1); \
+    vC[2*k  ] = vmlaq_laneq_s32(vC[2*k  ], vB[12], vA[1], 2); \
+    vC[2*k  ] = vmlaq_laneq_s32(vC[2*k  ], vB[14], vA[1], 3); \
+    vC[2*k+1] = vmlaq_laneq_s32(vC[2*k+1], vB[1],  vA[0], 0); \
+    vC[2*k+1] = vmlaq_laneq_s32(vC[2*k+1], vB[3],  vA[0], 1); \
+    vC[2*k+1] = vmlaq_laneq_s32(vC[2*k+1], vB[5],  vA[0], 2); \
+    vC[2*k+1] = vmlaq_laneq_s32(vC[2*k+1], vB[7],  vA[0], 3); \
+    vC[2*k+1] = vmlaq_laneq_s32(vC[2*k+1], vB[9],  vA[1], 0); \
+    vC[2*k+1] = vmlaq_laneq_s32(vC[2*k+1], vB[11], vA[1], 1); \
+    vC[2*k+1] = vmlaq_laneq_s32(vC[2*k+1], vB[13], vA[1], 2); \
+    vC[2*k+1] = vmlaq_laneq_s32(vC[2*k+1], vB[15], vA[1], 3); 
+#define s32_488lBfC_load2B(k) \
+    vB[k*2  ] = vld1q_s32(B + b + LDBC * 0); \
+    vB[k*2+1] = vld1q_s32(B + b + LDBC * 0 + 4);
+    
 void mks32_4x8k8_ldB_fchC(
     const int32_t *A, const int32_t *B, int32_t *C,
     size_t ni, size_t nj, size_t nk,
     size_t LDA, size_t LDBC) 
 {
-    
+    /* 128-bits Vector Registers:
+          C                  =  A                     *  B
+        [C0      ][C1      ]   [A00      ][A01      ]   [B00      ][B01      ]
+        [C2      ][C3      ]   [A10      ][A11      ]   [B10      ][B11      ]
+        [C4      ][C5      ]   [A20      ][A21      ]   [B20      ][B21      ]
+        [C6      ][C7      ]   [A30      ][A31      ]   [B30      ][B31      ]
+                                                        [B40      ][B41      ]
+                                                        [B50      ][B51      ]
+                                                        [B60      ][B61      ]
+                                                        [B70      ][B71      ]
+    */
+    size_t a, b, c;
+    int32x4_t vA[2], vB[16], vC[8];
+
+    for (size_t i = 0; i < ni; i += 4) {
+        for (size_t j = 0; j < nj; j += 8) {
+            c = i*LDBC + j;
+            vC[0] = vld1q_s32(C + c + LDBC*0);
+            vC[1] = vld1q_s32(C + c + LDBC*0 + 4);
+            vC[2] = vld1q_s32(C + c + LDBC*1);
+            vC[3] = vld1q_s32(C + c + LDBC*1 + 4);
+            vC[4] = vld1q_s32(C + c + LDBC*2);
+            vC[5] = vld1q_s32(C + c + LDBC*2 + 4);
+            vC[6] = vld1q_s32(C + c + LDBC*3);
+            vC[7] = vld1q_s32(C + c + LDBC*3 + 4);
+
+            for (size_t k = 0; k < nk; k += 8) {
+                a = i*LDA + k;
+                b = k*LDBC + j;
+                s32_488lBfC_load2B(0);
+                s32_488lBfC_load2B(1);
+                s32_488lBfC_load2B(2);
+                s32_488lBfC_load2B(3);
+
+                s32_488lBfC_vA(0);
+                s32_488lBfC_vA(1);
+                s32_488lBfC_vA(2);
+                s32_488lBfC_vA(3);
+            }
+            vst1q_s32(C + c + LDBC*0,       vC[0]);
+            vst1q_s32(C + c + LDBC*0 + 4,   vC[1]);
+            vst1q_s32(C + c + LDBC*1,       vC[2]);
+            vst1q_s32(C + c + LDBC*1 + 4,   vC[3]);
+            vst1q_s32(C + c + LDBC*2,       vC[4]);
+            vst1q_s32(C + c + LDBC*2 + 4,   vC[5]);
+            vst1q_s32(C + c + LDBC*3,       vC[6]);
+            vst1q_s32(C + c + LDBC*3 + 4,   vC[7]);
+        }
+    }
+}
+
+
+
+//# Micro-Kernel + Repacking
+#define s32_444lBfCpAB_vA(k) \
+    vA = vld1q_s32(pA + k*4); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[0], vA, 0); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[1], vA, 1); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[2], vA, 2); \
+    vC[k] = vmlaq_laneq_s32(vC[k], vB[3], vA, 3);
+
+void mks32_4x4k4_ldB_fchC_pkAB(
+    const int32_t *A, const int32_t *B, int32_t *C,
+    size_t ni, size_t nj, size_t nk, size_t LDC)
+{
+    const int32_t *pA, *pB;
+    int32_t *pC;
+    int32x4_t vA, vB[4], vC[4];
+
+    for (size_t i = 0; i < ni; i += 4) {
+        for (size_t j = 0; j < nj; j += 4) {
+            pC = C + i*LDC + j;
+            vC[0] = vld1q_s32(pC + LDC*0);
+            vC[1] = vld1q_s32(pC + LDC*1);
+            vC[2] = vld1q_s32(pC + LDC*2);
+            vC[3] = vld1q_s32(pC + LDC*3);
+
+            pA = A + i*nk;
+            pB = B + j*nk;
+            for (size_t k = 0; k < nk; k += 4) {
+                vB[0] = vld1q_s32(pB + 0);
+                vB[1] = vld1q_s32(pB + 4);
+                vB[2] = vld1q_s32(pB + 8);
+                vB[3] = vld1q_s32(pB + 12);
+
+                s32_444lBfCpAB_vA(0);
+                s32_444lBfCpAB_vA(1);
+                s32_444lBfCpAB_vA(2);
+                s32_444lBfCpAB_vA(3);
+                pB += 16;
+                pA += 16;
+            }
+
+            vst1q_s32(pC + LDC*0, vC[0]);
+            vst1q_s32(pC + LDC*1, vC[1]);
+            vst1q_s32(pC + LDC*2, vC[2]);
+            vst1q_s32(pC + LDC*3, vC[3]);
+        }
+    }
 }

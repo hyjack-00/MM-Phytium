@@ -3,3 +3,6 @@ build
 bin
 input
 output
+
+Makefile_
+build.sh
