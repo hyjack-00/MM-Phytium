@@ -7,7 +7,6 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 aux_source_directory(./microkernels KERNELS)
 set(TEST ./test/kernels_test.cpp)
 add_executable(kernels_test ${TEST} ${KERNELS})
-target_link_libraries(kernels_test pthread)
 target_include_directories(kernels_test PUBLIC ./microkernels)
 
 # compile options
