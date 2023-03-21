@@ -5,6 +5,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+#include <queue>
 
 #include <omp.h>
 
@@ -165,21 +166,19 @@ void outer_kernel(
 int main() {
     const int input_loop = 10;
     const int compute_loop = 10;
-    // const int blocking_loop = 100;
     // const int ni = 4, nj = 8, nk = 8;
     const int ni = TEST_N, nj = TEST_N, nk = TEST_N;
 
-    OS << "Test start" << endl;
+
+    #if OPTI_BLOCKING_MODE == false
+    // 性能测试模式 ==============================
+    OS << "Standard Test start" << endl;
     OS << "Loop: " << input_loop << "x" << compute_loop
        << ", Size: i" << ni << " j" << nj << " k" << nk << endl;
     #if FILE_OUTPUT == true
     cout << "File output: " << ouput_file << endl; 
     #endif
 
-
-
-    #if OPTI_BLOCKING_MODE == false
-    // 性能测试模式
     double total_time2 = 0;
     for (int input = 0; input < input_loop; input ++) {
         int32_t *A = (int32_t *) malloc(sizeof(int32_t) * ni * nk);
@@ -241,15 +240,81 @@ int main() {
 
     #else  // OPTI_BLOCKING_MODE
     // 寻找最优分块模式 ==============================
-    const int blocking_unit = 32;
+    const int blk_unit = 32;
+    const int blk_lb = 64 / blk_unit;
+    const int blk_ub = ni / blk_unit;
+    const int rand_loop = 50;
+    const int topN = 40;
+    srand(time(0));
 
-    int32_t *A = (int32_t *) malloc(sizeof(int32_t) * ni * nk);
-    int32_t *B = (int32_t *) malloc(sizeof(int32_t) * nk * nj);
-    int32_t *C = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
-    int32_t *D = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
-    rand_mat_s32(A, ni * nk, time(0));
-    rand_mat_s32(B, nk * nj, time(0)+1);
+    OS << "Block Size Optimizing Test start" << endl;
+    OS << "Loop: " << input_loop << "x" << rand_loop << "x" << compute_loop << endl;
+    OS << ", Size: i" << ni << " j" << nj << " k" << nk << endl;
+    #if FILE_OUTPUT == true
+    cout << "File output: " << ouput_file << endl; 
+    #endif
 
+    struct block_t {
+        int Ti, Tj, Tk;
+        float time;
+        bool operator<(block_t b) {
+            return this.time < b.time;
+        }
+    };
+    std::priority_queue<block_t> pq_block;
+    for (int i = 0; i < topN; i ++) pq_block.push({-1,-1,-1,10000});
+
+    float *record = (float *) malloc(sizeof(float) * 4 * input_loop * rand_loop);
+    int idx_record = 0;
+
+    for (int input = 0; input < input_loop; input ++) {
+        int32_t *A = (int32_t *) malloc(sizeof(int32_t) * ni * nk);
+        int32_t *B = (int32_t *) malloc(sizeof(int32_t) * nk * nj);
+        int32_t *C = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
+        rand_mat_s32(A, ni * nk, time(0));
+        rand_mat_s32(B, nk * nj, time(0)+1);
+
+        for (int rand = 0; rand < rand_loop; rand ++) {
+            zeros(C, ni * nj);
+            Ti = (rand() % (blk_ub-blk_lb) + blk_lb) * blk_unit;
+            Tj = (rand() % (blk_ub-blk_lb) + blk_lb) * blk_unit;
+            Tk = (rand() % (blk_ub-blk_lb) + blk_lb) * blk_unit;
+
+            double total_time = 0.;
+            for (int compute = 0; compute < compute_loop; compute ++) {
+                auto start = Clock::now();
+
+                // outer_kernel(A, B, C, ni, nj, nk, mks32_8x4k8_ldA_fchC);
+                outer_kernel_packAB(A, B, C, ni, nj, nk, 
+                    mks32_4x8k8_ldB_fchC_pkAB, 
+                    packs32_4x8k8_A,
+                    packs32_4x8k8_B);
+                // outer_kernel_packABC(A, B, C, ni, nj, nk, 
+                //     mks32_4x8k8_ldB_fchC_pkABC, 
+                //     packs32_4x8k8_A,
+                //     packs32_4x8k8_B,
+                //     packs32_4x8k8_C,
+                //     unpacks32_4x8k8_C);
+
+                auto end = Clock::now();
+                double dur = Dur(start, end);
+                total_time += dur / 1000.;
+            }
+            double t = total_time / compute_loop;
+            OS << Ti << " " << Tj << " " << Tk << " " << t << " msecs" << endl;
+
+            if (t < pq_block.top().time) {
+                pq_block.pop();
+                pq_block.push({(float)Ti, (float)Tj, (float)Tk, t});
+            }
+        }
+
+        free(A);
+        free(B);
+        free(C);
+    }
+    print_mat(record, input_loop * rand_loop, 4, "blocking record");
+    free(record);
     #endif 
 
 
