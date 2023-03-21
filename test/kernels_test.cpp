@@ -19,6 +19,7 @@ typedef std::chrono::high_resolution_clock Clock;
 
 #define FILE_OUTPUT false  // 是否输出从 stdout 到 文件
 #define ANS_CHECK true  // 是否进行答案检查
+#define OPTI_BLOCKING_MODE false  // 是否为分块大小测试模式
 
 string ouput_file = "output/output.dat";
 #if FILE_OUTPUT == true
@@ -87,9 +88,9 @@ void zeros(T *mat, int length_1d) {
 }
 
 
-#define Ti 256
-#define Tj 256
-#define Tk 256
+static size_t Ti = 256;
+static size_t Tj = 256;
+static size_t Tk = 256;
 #define MIN(x,y) (((x)<(y))?(x):(y))
 
 void outer_kernel_packAB(
@@ -164,6 +165,7 @@ void outer_kernel(
 int main() {
     const int input_loop = 10;
     const int compute_loop = 10;
+    const int blocking_loop = 100;
     // const int ni = 4, nj = 8, nk = 8;
     const int ni = TEST_N, nj = TEST_N, nk = TEST_N;
 
@@ -174,6 +176,10 @@ int main() {
     cout << "File output: " << ouput_file << endl; 
     #endif
 
+
+
+    #if OPTI_BLOCKING_MODE == false
+    // 性能测试模式
     double total_time2 = 0;
     for (int input = 0; input < input_loop; input ++) {
         int32_t *A = (int32_t *) malloc(sizeof(int32_t) * ni * nk);
@@ -185,6 +191,7 @@ int main() {
         // rand_mat_s32(A, ni * nk, time(0));
         // rand_mat_s32(B, nk * nj, time(0)+1);
 
+        // 连续计算 ==============================
         double total_time1 = 0;
         for (int compute = 0; compute < compute_loop; compute ++) {
             zeros(C, ni * nj);
@@ -205,19 +212,12 @@ int main() {
         OS << "  avg time1: " << total_time1/compute_loop << " msecs for input: " << input << endl;
         total_time2 += total_time1/compute_loop;
 
-        { // 对比
-            zeros(D, ni * nj);
-            auto start = Clock::now();
-
-            outer_kernel(A, B, D, ni, nj, nk, mks32_0);
-
-            auto end = Clock::now();
-            double dur = Dur(start, end);
-            dur /= 1000.0;
-            OS << "  base time: " << dur << " msecs" << endl;
-
-            ans_check_s32(C, D, ni, nj);
-        }
+        // 答案检查 ==============================
+        #if ANS_CHECK == true  
+        zeros(D, ni * nj);
+        outer_kernel(A, B, D, ni, nj, nk, mks32_0);
+        ans_check_s32(C, D, ni, nj);
+        #endif
 
         // print_mat(A, ni, nk, "A");
         // print_mat(B, nk, nj, "B");
@@ -230,6 +230,24 @@ int main() {
     }
     OS << "    total avg time2: " << total_time2/input_loop << " msecs" << endl;
 
+
+
+    #else  // OPTI_BLOCKING_MODE
+    // 寻找最优分块模式 ==============================
+    const int blocking_unit = 32;
+
+    int32_t *A = (int32_t *) malloc(sizeof(int32_t) * ni * nk);
+    int32_t *B = (int32_t *) malloc(sizeof(int32_t) * nk * nj);
+    int32_t *C = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
+    int32_t *D = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
+    rand_mat_s32(A, ni * nk, time(0));
+    rand_mat_s32(B, nk * nj, time(0)+1);
+
+    #endif 
+
+
+
+    // 收尾 ==============================
     char cur_time[50];
     time_t now = time(NULL);
     strftime(cur_time, 50, "%x %X", localtime(&now));
