@@ -100,7 +100,6 @@ void outer_kernel_packAB(
     int32_t *Apack = (int32_t *) malloc(sizeof(int32_t) * Ti * Tk);
     int32_t *Bpack = (int32_t *) malloc(sizeof(int32_t) * Tk * Tj);
 
-    // #pragma omp parallel for collapse(2)
     for (size_t i0 = 0; i0 < ni; i0 += Ti) {
         for (size_t j0 = 0; j0 < nj; j0 += Tj) {
             size_t it = MIN(ni-i0, Ti);
@@ -112,6 +111,33 @@ void outer_kernel_packAB(
                 // print_mat(Apack, it*kt/32, 32, "Apack");
                 // print_mat(Bpack, kt*jt/64, 64, "Bpack");
                 mk(Apack, Bpack, C+i0*nj+j0, it, jt, kt, nj);
+            }
+        }
+    }
+}
+void outer_kernel_packABC(
+    int32_t *A, int32_t *B, int32_t *C,
+    size_t ni, size_t nj, size_t nk,
+    mks32_pABC_t mk, packs32_A_t pkA, packs32_B_t pkB, 
+    packs32_C_t pkC, unpacks32_C_t upkC) 
+{
+    int32_t *Apack = (int32_t *) malloc(sizeof(int32_t) * Ti * Tk);
+    int32_t *Bpack = (int32_t *) malloc(sizeof(int32_t) * Tk * Tj);
+    int32_t *Cpack = (int32_t *) malloc(sizeof(int32_t) * Ti * Tj);
+
+    for (size_t i0 = 0; i0 < ni; i0 += Ti) {
+        for (size_t j0 = 0; j0 < nj; j0 += Tj) {
+            size_t it = MIN(ni-i0, Ti);
+            size_t jt = MIN(nj-j0, Tj);
+            for (size_t k0 = 0; k0 < nk; k0 += Tk) {
+                size_t kt = MIN(nk-k0, Tk);
+                pkA(A+i0*nk+k0, Apack, it, kt, nk);
+                pkB(B+k0*nj+j0, Bpack, kt, jt, nj);
+                pkC(C+i0*nj+j0, Bpack, kt, jt, nj);
+
+                mk(Apack, Bpack, Cpack, it, jt, kt);
+                
+                upkC(C+i0*nj+j0, Bpack, kt, jt, nj);
             }
         }
     }
