@@ -6,6 +6,7 @@ using std::endl;
 
 #include <arm_neon.h>
 
+#define size_t unsigned int  // 覆盖 unsigned long
 
 //# Micro-Kernel
 typedef void mks32_t(
@@ -116,10 +117,10 @@ void packs32_4x4k4_B(
 // 488
 void packs32_4x8k8_A(
     int32_t *A, int32_t *Apack,
-    size_t ni, size_t nk, size_t LDA);
+    size_t it, size_t kt, size_t LDA);
 void packs32_4x8k8_B(
     int32_t *B, int32_t *Bpack,
-    size_t nk, size_t nj, size_t LDB);
+    size_t kt, size_t jt, size_t LDB);
 void packs32_4x8k8_C(
     int32_t *C, int32_t *Cpack,
     size_t it, size_t jt, size_t LDC);
@@ -130,7 +131,7 @@ void unpacks32_4x8k8_C(
 // 848
 void packs32_8x4k8_A(
     int32_t *A, int32_t *Apack,
-    size_t ni, size_t nk, size_t LDA);
+    size_t it, size_t kt, size_t LDA);
 void packs32_8x4k8_B(
     int32_t *B, int32_t *Bpack,
-    size_t nk, size_t nj, size_t LDB);
+    size_t kt, size_t jt, size_t LDB);

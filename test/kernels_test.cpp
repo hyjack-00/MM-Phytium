@@ -18,7 +18,7 @@ typedef std::chrono::high_resolution_clock Clock;
 #define Dur(start,end) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
 #define FILE_OUTPUT false  // 是否输出从 stdout 到 文件
-#define ANS_CHECK true  // 是否进行答案检查
+#define ANS_CHECK false  // 是否进行答案检查
 #define OPTI_BLOCKING_MODE false  // 是否为分块大小测试模式
 
 string ouput_file = "output/output.dat";
@@ -134,11 +134,11 @@ void outer_kernel_packABC(
                 size_t kt = MIN(nk-k0, Tk);
                 pkA(A+i0*nk+k0, Apack, it, kt, nk);
                 pkB(B+k0*nj+j0, Bpack, kt, jt, nj);
-                pkC(C+i0*nj+j0, Bpack, kt, jt, nj);
+                pkC(C+i0*nj+j0, Cpack, kt, jt, nj);
 
                 mk(Apack, Bpack, Cpack, it, jt, kt);
                 
-                upkC(C+i0*nj+j0, Bpack, kt, jt, nj);
+                upkC(C+i0*nj+j0, Cpack, kt, jt, nj);
             }
         }
     }
@@ -160,12 +160,12 @@ void outer_kernel(
     }
 }
 
-#define TEST_N 1024
+#define TEST_N 2048
 
 int main() {
     const int input_loop = 10;
     const int compute_loop = 10;
-    const int blocking_loop = 100;
+    // const int blocking_loop = 100;
     // const int ni = 4, nj = 8, nk = 8;
     const int ni = TEST_N, nj = TEST_N, nk = TEST_N;
 
@@ -186,10 +186,10 @@ int main() {
         int32_t *B = (int32_t *) malloc(sizeof(int32_t) * nk * nj);
         int32_t *C = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
         int32_t *D = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
-        rand_mat_s32(A, ni * nk, 1234);
-        rand_mat_s32(B, nk * nj, 5678);
-        // rand_mat_s32(A, ni * nk, time(0));
-        // rand_mat_s32(B, nk * nj, time(0)+1);
+        // rand_mat_s32(A, ni * nk, 1234);
+        // rand_mat_s32(B, nk * nj, 5678);
+        rand_mat_s32(A, ni * nk, time(0));
+        rand_mat_s32(B, nk * nj, time(0)+1);
 
         // 连续计算 ==============================
         double total_time1 = 0;
@@ -197,11 +197,17 @@ int main() {
             zeros(C, ni * nj);
             auto start = Clock::now();
 
-            // outer_kernel(A, B, C, ni, nj, nk, mks32_4x8k8_ldA_fchC);
+            // outer_kernel(A, B, C, ni, nj, nk, mks32_8x4k8_ldA_fchC);
             outer_kernel_packAB(A, B, C, ni, nj, nk, 
                 mks32_4x8k8_ldB_fchC_pkAB, 
                 packs32_4x8k8_A,
                 packs32_4x8k8_B);
+            // outer_kernel_packABC(A, B, C, ni, nj, nk, 
+            //     mks32_4x8k8_ldB_fchC_pkABC, 
+            //     packs32_4x8k8_A,
+            //     packs32_4x8k8_B,
+            //     packs32_4x8k8_C,
+            //     unpacks32_4x8k8_C);
 
             auto end = Clock::now();
             double dur = Dur(start, end);
@@ -217,12 +223,13 @@ int main() {
         zeros(D, ni * nj);
         outer_kernel(A, B, D, ni, nj, nk, mks32_0);
         ans_check_s32(C, D, ni, nj);
+
+        print_mat(A, ni, nk, "A");
+        print_mat(B, nk, nj, "B");
+        print_mat(C, ni, nj, "C");
+        print_mat(D, ni, nj, "D");
         #endif
 
-        // print_mat(A, ni, nk, "A");
-        // print_mat(B, nk, nj, "B");
-        // print_mat(C, ni, nj, "C");
-        // print_mat(D, ni, nj, "D");
         free(A);
         free(B);
         free(C);

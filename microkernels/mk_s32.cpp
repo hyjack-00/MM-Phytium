@@ -364,14 +364,14 @@ void mks32_8x4k8_ldB_fchC(
                 s32_848lBfC_vA(6);
                 s32_848lBfC_vA(7);
             }
-            vst1q_s32(C + c + LDBC*0,       vC[0]);
-            vst1q_s32(C + c + LDBC*0 + 4,   vC[1]);
-            vst1q_s32(C + c + LDBC*1,       vC[2]);
-            vst1q_s32(C + c + LDBC*1 + 4,   vC[3]);
-            vst1q_s32(C + c + LDBC*2,       vC[4]);
-            vst1q_s32(C + c + LDBC*2 + 4,   vC[5]);
-            vst1q_s32(C + c + LDBC*3,       vC[6]);
-            vst1q_s32(C + c + LDBC*3 + 4,   vC[7]);
+            vst1q_s32(C + c + LDBC*0, vC[0]);
+            vst1q_s32(C + c + LDBC*1, vC[1]);
+            vst1q_s32(C + c + LDBC*2, vC[2]);
+            vst1q_s32(C + c + LDBC*3, vC[3]);
+            vst1q_s32(C + c + LDBC*4, vC[4]);
+            vst1q_s32(C + c + LDBC*5, vC[5]);
+            vst1q_s32(C + c + LDBC*6, vC[6]);
+            vst1q_s32(C + c + LDBC*7, vC[7]);
         }
     }   
 }
@@ -399,7 +399,7 @@ void mks32_8x4k8_ldB_fchC(
     vC[6] = vmlaq_laneq_s32(vC[6], vB, vA[13], k); \
     vC[7] = vmlaq_laneq_s32(vC[7], vB, vA[15], k); 
 #define s32_848lAfC_load2A(k) \
-    vA[2*k  ] = vld1q_s32(A + a + LDA * k);
+    vA[2*k  ] = vld1q_s32(A + a + LDA * k); \
     vA[2*k+1] = vld1q_s32(A + a + LDA * k + 4);
 
 void mks32_8x4k8_ldA_fchC(
@@ -443,17 +443,18 @@ void mks32_8x4k8_ldA_fchC(
                 s32_848lAfC_vB1(2);
                 s32_848lAfC_vB1(3);
             }
-            vst1q_s32(C + c + LDBC*0,       vC[0]);
-            vst1q_s32(C + c + LDBC*0 + 4,   vC[1]);
-            vst1q_s32(C + c + LDBC*1,       vC[2]);
-            vst1q_s32(C + c + LDBC*1 + 4,   vC[3]);
-            vst1q_s32(C + c + LDBC*2,       vC[4]);
-            vst1q_s32(C + c + LDBC*2 + 4,   vC[5]);
-            vst1q_s32(C + c + LDBC*3,       vC[6]);
-            vst1q_s32(C + c + LDBC*3 + 4,   vC[7]);
+            vst1q_s32(C + c + LDBC*0, vC[0]);
+            vst1q_s32(C + c + LDBC*1, vC[1]);
+            vst1q_s32(C + c + LDBC*2, vC[2]);
+            vst1q_s32(C + c + LDBC*3, vC[3]);
+            vst1q_s32(C + c + LDBC*4, vC[4]);
+            vst1q_s32(C + c + LDBC*5, vC[5]);
+            vst1q_s32(C + c + LDBC*6, vC[6]);
+            vst1q_s32(C + c + LDBC*7, vC[7]);
         }
     }    
 }
+
 
 
 //# Micro-Kernel + Repacking
