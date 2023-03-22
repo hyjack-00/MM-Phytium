@@ -47,6 +47,7 @@ perf: 9.194918 GIPS
 | `8x4k8_ldA_fchC`          |           | 544.788   |           |
 ||||
 | `8x8k4_ldB_fchC`          |           | 452.039   |           |
+| `8x8k4_ldA_fchC`          |           | 400.938   |           |
 
 best: `4x8k8_ldB_fchC_pkAB` , waiting for parallelization 
 
@@ -57,6 +58,6 @@ best: `4x8k8_ldB_fchC_pkAB` , waiting for parallelization
 
 - [ ] outer_kernel 的 ijk 顺序变成 ? 怎么样
 - [ ] micro_kernel 的 ijk 顺序变成 ikj 怎么样，packing 需要随之改变
-- [ ] 与 fetch 相对的 append：
+- [x] 与 fetch 相对的 append：
 
     初始化 C 寄存器时直接全 0 ，最后再 取出相加存入

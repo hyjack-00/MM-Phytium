@@ -526,9 +526,84 @@ void mks32_8x8k4_ldB_fchC(
     }
 }
 
+
+// 884, load A
+#define s32_884lAfC_vB(k) \
+    vB[0]  = vld1q_s32(B + b + LDBC * k); \
+    vB[1]  = vld1q_s32(B + b + LDBC * k + 4); \
+    vC[0]  = vmlaq_laneq_s32(vC[0],  vB[0], vA[0], k); \
+    vC[2]  = vmlaq_laneq_s32(vC[2],  vB[0], vA[1], k); \
+    vC[4]  = vmlaq_laneq_s32(vC[4],  vB[0], vA[2], k); \
+    vC[6]  = vmlaq_laneq_s32(vC[6],  vB[0], vA[3], k); \
+    vC[8]  = vmlaq_laneq_s32(vC[8],  vB[0], vA[4], k); \
+    vC[10] = vmlaq_laneq_s32(vC[10], vB[0], vA[5], k); \
+    vC[12] = vmlaq_laneq_s32(vC[12], vB[0], vA[6], k); \
+    vC[14] = vmlaq_laneq_s32(vC[14], vB[0], vA[7], k); \
+    vC[1]  = vmlaq_laneq_s32(vC[1],  vB[1], vA[0], k); \
+    vC[3]  = vmlaq_laneq_s32(vC[3],  vB[1], vA[1], k); \
+    vC[5]  = vmlaq_laneq_s32(vC[5],  vB[1], vA[2], k); \
+    vC[7]  = vmlaq_laneq_s32(vC[7],  vB[1], vA[3], k); \
+    vC[9]  = vmlaq_laneq_s32(vC[9],  vB[1], vA[4], k); \
+    vC[11] = vmlaq_laneq_s32(vC[11], vB[1], vA[5], k); \
+    vC[13] = vmlaq_laneq_s32(vC[13], vB[1], vA[6], k); \
+    vC[15] = vmlaq_laneq_s32(vC[15], vB[1], vA[7], k); 
+#define s32_884lAfC_load2C(k) \
+    vC[k*2  ] = vld1q_s32(C + c + LDBC * k); \
+    vC[k*2+1] = vld1q_s32(C + c + LDBC * k + 4);
+#define s32_884lAfC_store2C(k) \
+    vst1q_s32(C + c + LDBC * k,     vC[k*2  ]); \
+    vst1q_s32(C + c + LDBC * k + 4, vC[k*2+1]); 
+
+void mks32_8x8k4_ldA_fchC(
+    const int32_t *A, const int32_t *B, int32_t *C,
+    size_t ni, size_t nj, size_t nk,
+    size_t LDA, size_t LDBC) 
+{
+    size_t a, b, c;
+    int32x4_t vA[8], vB[2], vC[16];
+
+    for (size_t i = 0; i < ni; i += 8) {
+        for (size_t j = 0; j < nj; j += 8) {
+            c = i*LDBC + j;
+            s32_884lAfC_load2C(0);
+            s32_884lAfC_load2C(1);
+            s32_884lAfC_load2C(2);
+            s32_884lAfC_load2C(3);
+            s32_884lAfC_load2C(4);
+            s32_884lAfC_load2C(5);
+            s32_884lAfC_load2C(6);
+            s32_884lAfC_load2C(7);
+
+            for (size_t k = 0; k < nk; k += 4) {
+                a = i*LDA + k;
+                b = k*LDBC + j;
+                vA[0] = vld1q_s32(A + a + LDA * 0);
+                vA[1] = vld1q_s32(A + a + LDA * 1);
+                vA[2] = vld1q_s32(A + a + LDA * 2);
+                vA[3] = vld1q_s32(A + a + LDA * 3);
+                vA[4] = vld1q_s32(A + a + LDA * 4);
+                vA[5] = vld1q_s32(A + a + LDA * 5);
+                vA[6] = vld1q_s32(A + a + LDA * 6);
+                vA[7] = vld1q_s32(A + a + LDA * 7);
+
+                s32_884lAfC_vB(0);
+                s32_884lAfC_vB(1);
+                s32_884lAfC_vB(2);
+                s32_884lAfC_vB(3);
+            }
+            s32_884lAfC_store2C(0);
+            s32_884lAfC_store2C(1);
+            s32_884lAfC_store2C(2);
+            s32_884lAfC_store2C(3);
+            s32_884lAfC_store2C(4);
+            s32_884lAfC_store2C(5);
+            s32_884lAfC_store2C(6);
+            s32_884lAfC_store2C(7);
+        }
+    }
+}
+
 Tried */ 
-
-
 
 
 
