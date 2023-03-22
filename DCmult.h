@@ -1,6 +1,6 @@
 #pragma once
-#ifndef SPARSE_MULT
-#define SPARSE_MULT
+#ifndef DOUBLE_COMPRESSED_SPARSE_MULT
+#define DOUBLE_COMPRESSED_SPARSE_MULT
 
 #include "transfer.h"
 #include <iostream>
@@ -11,13 +11,6 @@
 
 typedef unsigned int uint;
 typedef const unsigned int cui;
-
-// 这个表格是用来查询乘法前应做什么操作，包括是否转置，是否调换AB。以转置最少为目标。
-bool Atrans[8] = { 1,0,0,0,0,0,0,1 };
-bool Btrans[8] = { 0,1,0,0,0,0,1,0 };
-bool Ctrans[8] = { 0,0,1,0,0,1,0,0 };
-bool ABswap[8] = { 1,0,0,0,1,1,1,0 };
-
 
 template<typename tp>
 struct Cord {
@@ -51,9 +44,9 @@ bool is_equal(const Cord<tp>* a, const Cord<tp>* b) {
 //注意：目前的版本下，调用本函数之后，C作为一个指针会改变其所指的位置。这可能有所不妥？\
 //当前版本下，一次乘法可能需要四次转换存储方式。可能有更好的方法。
 template<typename tp>
-void gemm(dc_sparce_matrix<tp>* _A, dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>*& _C) {
+void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>*& _C) {
 	// 预处理
-	dc_sparce_matrix<tp>* A, * B, * C;
+	const dc_sparce_matrix<tp>* A, * B, * C;
 	if (_A->trans) {
 		A = new dc_sparce_matrix(*_A, 1);
 	}
@@ -148,5 +141,5 @@ void gemm(dc_sparce_matrix<tp>* _A, dc_sparce_matrix<tp>* _B, dc_sparce_matrix<t
 	return;
 }
 
-#endif // !SPARSE_MULT
+#endif // !DOUBLE_COMPRESSED_SPARSE_MULT
 

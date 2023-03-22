@@ -2,7 +2,8 @@
 #include<vector>
 using namespace std;
 
-#include "mult.h"
+#include "DCmult.h"
+#include "Cmult.h"
 #define M 4
 #define N 5
 #define L 3
@@ -36,14 +37,17 @@ int main() {
 	//init_random(a, ROW, COL);//4ÐÐ5ÁÐ
 	sparce_matrix<int> sa1(a, M, N, 0);
 	sparce_matrix<int> sa2(b, N, L, 1);
-	sparce_matrix<int> sa3(c, M, L, 1);
+	sparce_matrix<int>* sa3 = new sparce_matrix<int>(c, M, L, 1);
 	dc_sparce_matrix<int> d1(sa1);
 	dc_sparce_matrix<int> d2(sa2);
-	dc_sparce_matrix<int> d3(sa3);
+	dc_sparce_matrix<int> d3(*sa3);
 	dc_sparce_matrix<int> da1(d1, 1);
 	dc_sparce_matrix<int> da2(d2, 1);
 	dc_sparce_matrix<int>* da3 = new dc_sparce_matrix<int>(d3, 0);
-	gemm(&da1, &da2, da3);
-	cout << da1 << da2 << *da3;
+	dcgemm(&da1, &da2, da3);
+	cout << "da3: " << endl << * da3 << endl;
 
+	cgemm(&sa1, &sa2, sa3);
+	sparce_matrix<int> sta3(sa3, 1);
+	cout << "sta3: " << endl << sta3 << endl;
 }
