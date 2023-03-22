@@ -8,6 +8,7 @@
 
 #include <omp.h>
 
+#include "test.h"
 #include "microkernels.h"
 
 using std::string;
@@ -28,7 +29,7 @@ string ouput_file = "output/output.dat";
     #define OS cout
 #endif
 
-// 输入矩阵的随机数范围
+// 矩阵数据的随机数范围
 #define RAND_UB 10  // [LB, UB)
 #define RAND_LB -10
 

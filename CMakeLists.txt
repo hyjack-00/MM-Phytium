@@ -5,10 +5,14 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 
 # kernels_test
 aux_source_directory(./microkernels KERNELS)
-set(TEST ./test/kernels_test.cpp)
-add_executable(kernels_test ${TEST} ${KERNELS})
-target_link_libraries(kernels_test pthread)
+set(KERNELS_TEST ./test/kernels_test.cpp)
+add_executable(kernels_test ${KERNELS_TEST} ${KERNELS})
 target_include_directories(kernels_test PUBLIC ./microkernels)
+
+# sparce_test
+set(SPARCE_TEST ./test/sparce_test.cpp)
+add_executable(sparce_test ${SPARCE_TEST})
+target_include_directories(sparce_test PUBLIC ./sparce)
 
 # compile options
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -Wall -Wextra -g -falign-loops -march=native -ffast-math -fopenmp")

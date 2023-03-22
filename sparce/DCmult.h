@@ -41,26 +41,26 @@ bool is_equal(const Cord<tp>* a, const Cord<tp>* b) {
 }
 
 //这里假定ABC是列，行，行优先
-//注意：目前的版本下，调用本函数之后，C作为一个指针会改变其所指的位置。这可能有所不妥？\
+//注意：目前的版本下，调用本函数之后，C作为一个指针会改变其所指的位置。这可能有所不妥？
 //当前版本下，一次乘法可能需要四次转换存储方式。可能有更好的方法。
 template<typename tp>
 void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>*& _C) {
 	// 预处理
 	const dc_sparce_matrix<tp>* A, * B, * C;
 	if (_A->trans) {
-		A = new dc_sparce_matrix(*_A, 1);
+		A = new dc_sparce_matrix<tp>(*_A, 1);
 	}
 	else {
 		A = _A;
 	}
 	if (!_B->trans) {
-		B = new dc_sparce_matrix(*_B, 1);
+		B = new dc_sparce_matrix<tp>(*_B, 1);
 	}
 	else {
 		B = _B;
 	}
 	if (!_C->trans) {
-		C = new dc_sparce_matrix(*_C, 1);
+		C = new dc_sparce_matrix<tp>(*_C, 1);
 	}
 	else {
 		C = _C;
@@ -86,7 +86,7 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 			//生成A的一列和B的一列乘出来的笛卡尔积。
 			for (uint i = (*(A->col_range))[a]; i < (*(A->col_range))[a + 1]; i++) {
 				for (uint j = (*(B->col_range))[b]; j < (*(B->col_range))[b + 1]; j++) {
-					Cord<tp>* a = new Cord(A->row_index->at(i), B->row_index->at(j), (A->data->at(i) * B->data->at(j)), mid_results->size()-1);
+					Cord<tp>* a = new Cord<tp>(A->row_index->at(i), B->row_index->at(j), (A->data->at(i) * B->data->at(j)), mid_results->size()-1);
 					desc_res->push(a);
 				}
 			}
