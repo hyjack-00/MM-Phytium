@@ -19,7 +19,7 @@ typedef std::chrono::high_resolution_clock Clock;
 #define Dur(start,end) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
 #define FILE_OUTPUT false  // 是否输出从 stdout 到 文件
-#define ANS_CHECK false  // 是否进行答案检查
+#define ANS_CHECK true  // 是否进行答案检查
 #define OPTI_BLOCKING_MODE false  // 是否为分块大小测试模式
 
 string ouput_file = "output/output.dat";
@@ -88,6 +88,15 @@ void zeros(T *mat, int length_1d) {
     for (int i = 0; i < length_1d; i ++) mat[i] = 0;
 }
 
+#if OPTI_BLOCKING_MODE == true
+struct block_t {
+    size_t Ti, Tj, Tk;
+    float time;
+};
+bool operator<(const block_t &b1, const block_t &b2) {
+    return b1.time < b2.time;
+}
+#endif
 
 static size_t Ti = 256;
 static size_t Tj = 256;
@@ -161,7 +170,15 @@ void outer_kernel(
     }
 }
 
-#define TEST_N 2048
+
+
+
+
+
+
+
+
+#define TEST_N 1024
 
 int main() {
     const int input_loop = 10;
@@ -185,10 +202,10 @@ int main() {
         int32_t *B = (int32_t *) malloc(sizeof(int32_t) * nk * nj);
         int32_t *C = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
         int32_t *D = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
-        // rand_mat_s32(A, ni * nk, 1234);
-        // rand_mat_s32(B, nk * nj, 5678);
-        rand_mat_s32(A, ni * nk, time(0));
-        rand_mat_s32(B, nk * nj, time(0)+1);
+        rand_mat_s32(A, ni * nk, 1234);
+        rand_mat_s32(B, nk * nj, 5678);
+        // rand_mat_s32(A, ni * nk, time(0));
+        // rand_mat_s32(B, nk * nj, time(0)+1);
 
         // 连续计算 ==============================
         double total_time1 = 0;
@@ -196,11 +213,11 @@ int main() {
             zeros(C, ni * nj);
             auto start = Clock::now();
 
-            // outer_kernel(A, B, C, ni, nj, nk, mks32_8x4k8_ldA_fchC);
-            outer_kernel_packAB(A, B, C, ni, nj, nk, 
-                mks32_4x8k8_ldB_fchC_pkAB, 
-                packs32_4x8k8_A,
-                packs32_4x8k8_B);
+            outer_kernel(A, B, C, ni, nj, nk, mks32_8x8k4_ldB_fchC);
+            // outer_kernel_packAB(A, B, C, ni, nj, nk, 
+            //     mks32_4x8k8_ldB_fchC_pkAB,
+            //     packs32_4x8k8_A,
+            //     packs32_4x8k8_B);
             // outer_kernel_packABC(A, B, C, ni, nj, nk, 
             //     mks32_4x8k8_ldB_fchC_pkABC, 
             //     packs32_4x8k8_A,
@@ -240,29 +257,24 @@ int main() {
 
     #else  // OPTI_BLOCKING_MODE
     // 寻找最优分块模式 ==============================
-    const int blk_unit = 32;
-    const int blk_lb = 64 / blk_unit;
-    const int blk_ub = ni / blk_unit;
+    const size_t blk_unit = 32;
+    const size_t blk_lb = 64 / blk_unit;
+    const size_t blk_ub = ni / blk_unit;
     const int rand_loop = 50;
     const int topN = 40;
     srand(time(0));
 
     OS << "Block Size Optimizing Test start" << endl;
     OS << "Loop: " << input_loop << "x" << rand_loop << "x" << compute_loop << endl;
-    OS << ", Size: i" << ni << " j" << nj << " k" << nk << endl;
+    OS << "Size: i" << ni << " j" << nj << " k" << nk << endl;
     #if FILE_OUTPUT == true
     cout << "File output: " << ouput_file << endl; 
     #endif
 
-    struct block_t {
-        int Ti, Tj, Tk;
-        float time;
-        bool operator<(block_t b) {
-            return this.time < b.time;
-        }
-    };
+
+    
     std::priority_queue<block_t> pq_block;
-    for (int i = 0; i < topN; i ++) pq_block.push({-1,-1,-1,10000});
+    for (int i = 0; i < topN; i ++) pq_block.push({0,0,0,10000});
 
     float *record = (float *) malloc(sizeof(float) * 4 * input_loop * rand_loop);
     int idx_record = 0;
@@ -274,7 +286,7 @@ int main() {
         rand_mat_s32(A, ni * nk, time(0));
         rand_mat_s32(B, nk * nj, time(0)+1);
 
-        for (int rand = 0; rand < rand_loop; rand ++) {
+        for (int randT = 0; randT < rand_loop; randT ++) {
             zeros(C, ni * nj);
             Ti = (rand() % (blk_ub-blk_lb) + blk_lb) * blk_unit;
             Tj = (rand() % (blk_ub-blk_lb) + blk_lb) * blk_unit;
@@ -303,17 +315,28 @@ int main() {
             double t = total_time / compute_loop;
             OS << Ti << " " << Tj << " " << Tk << " " << t << " msecs" << endl;
 
+            record[idx_record+0] = (float) Ti;
+            record[idx_record+1] = (float) Tj;
+            record[idx_record+2] = (float) Tk;
+            record[idx_record+3] = (float) t;
+            idx_record += 4;
             if (t < pq_block.top().time) {
                 pq_block.pop();
-                pq_block.push({(float)Ti, (float)Tj, (float)Tk, t});
+                block_t blk = {Ti, Tj, Tk, (float)t};
+                pq_block.push(blk);
             }
         }
-
         free(A);
         free(B);
         free(C);
     }
     print_mat(record, input_loop * rand_loop, 4, "blocking record");
+    OS << endl << "============================ result ============================" << endl;
+    while (!pq_block.empty()) {
+        auto block = pq_block.top();
+        pq_block.pop();
+        OS << block.Ti << " " << block.Tj << " " << block.Tk << " " << block.time << " msecs" << endl;
+    }
     free(record);
     #endif 
 

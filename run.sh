@@ -6,6 +6,7 @@ make
 cd ..
 
 echo "cleared from ./run.sh" > output/matrix.dat
+echo "cleared from ./run.sh" > output/output.dat
 
 export OMP_NUM_THREADS=4
 export OMP_PROC_BIND=close

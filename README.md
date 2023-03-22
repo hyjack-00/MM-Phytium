@@ -34,16 +34,19 @@ perf: 9.194918 GIPS
 | ----------- | ------ | ------ | ------ |
 | `4x4k4_ldB_fchC`          | 60.991    | 508.109   | 4838.53   |
 | `4x4k4_ldA_fchC`          | 61.4193   | 512.649   | 4866.18   |
-| `4x4k4_ldB_fchC_pkAB`     | 35.1663   | 284.983   | 2309.74   |
-| `4x4k4_ldB_fchC_pkABC`    | 35.7907   | 284.464   | 2331.31   |
+| `4x4k4_ldB_fchC_pkAB`     |           | 284.694   |           |
 ||||
 | `4x8k8_ldB_fchC`          | 44.4709   | 371.4     |           |
 | `4x8k8_ldB_fchC` i/4      |           | 128.873   |           |
 | `4x8k8_ldA_fchC`          |           | 406.423   |           |
-| `4x8k8_ldB_fchC_pkAB`     |           | 279.976   |           |
+| `4x8k8_ldB_fchC_pkAB`     | 35.7291   | 281.976   |           |
+| `4x8k8_ldB_fchC_pkABC`    | 35.7907   | 284.464   | 2331.31   |
+| `4x8k8_ldB_apdC_pkAB`     |           | 281.065   |           |
 ||||
 | `8x4k8_ldB_fchC`          |           | 548.868   |           |
 | `8x4k8_ldA_fchC`          |           | 544.788   |           |
+||||
+| `8x8k4_ldB_fchC`          |           | 452.039   |           |
 
 best: `4x8k8_ldB_fchC_pkAB` , waiting for parallelization 
 

@@ -68,6 +68,13 @@ void mks32_8x4k8_ldA_fchC(
     size_t ni, size_t nj, size_t nk,
     size_t LDA, size_t LDBC);
 
+/* 128-bits Vector Registers:
+    ...
+*/
+void mks32_8x8k4_ldB_fchC(
+    const int32_t *A, const int32_t *B, int32_t *C,
+    size_t ni, size_t nj, size_t nk,
+    size_t LDA, size_t LDBC);
 
 
 //# Micro-Kernel + Repacking
@@ -85,11 +92,12 @@ void mks32_4x4k4_ldB_fchC_pkAB(
 void mks32_4x8k8_ldB_fchC_pkAB(
     const int32_t *A, const int32_t *B, int32_t *C,
     size_t ni, size_t nj, size_t nk, size_t LDC);
-
 void mks32_4x8k8_ldB_fchC_pkABC(
     const int32_t *A, const int32_t *B, int32_t *C,
     size_t ni, size_t nj, size_t nk);
-
+void mks32_4x8k8_ldB_apdC_pkAB(
+    const int32_t *A, const int32_t *B, int32_t *C,
+    size_t ni, size_t nj, size_t nk, size_t LDC);
 
 
 //# Matrix Repacking
