@@ -65,11 +65,17 @@ void packs32_4x8k8_B(
     int32_t *pBpack = Bpack;
     for (size_t j = 0; j < jt; j += 8) {
         pB = B + j;
-        for (size_t k = 0; k < kt; k += 1) {
-            vst1q_s32(pBpack,   vld1q_s32(pB));
-            vst1q_s32(pBpack+4, vld1q_s32(pB + 4));
-            pB += LDB;
-            pBpack += 8;
+        for (size_t k = 0; k < kt; k += 4) {
+            vst1q_s32(pBpack,    vld1q_s32(pB + LDB * 0));
+            vst1q_s32(pBpack+4,  vld1q_s32(pB + LDB * 0 + 4));
+            vst1q_s32(pBpack+8,  vld1q_s32(pB + LDB * 1));
+            vst1q_s32(pBpack+12, vld1q_s32(pB + LDB * 1 + 4));
+            vst1q_s32(pBpack+16, vld1q_s32(pB + LDB * 2));
+            vst1q_s32(pBpack+20, vld1q_s32(pB + LDB * 2 + 4));
+            vst1q_s32(pBpack+24, vld1q_s32(pB + LDB * 3));
+            vst1q_s32(pBpack+28, vld1q_s32(pB + LDB * 3 + 4));
+            pB += LDB * 4;
+            pBpack += 32;
         }
     }
 }

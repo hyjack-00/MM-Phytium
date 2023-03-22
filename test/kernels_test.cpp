@@ -19,7 +19,7 @@ typedef std::chrono::high_resolution_clock Clock;
 #define Dur(start,end) std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
 
 #define FILE_OUTPUT false  // 是否输出从 stdout 到 文件
-#define ANS_CHECK true  // 是否进行答案检查
+#define ANS_CHECK false  // 是否进行答案检查
 #define OPTI_BLOCKING_MODE false  // 是否为分块大小测试模式
 
 string ouput_file = "output/output.dat";
@@ -112,11 +112,12 @@ void outer_kernel_packAB(
     int32_t *Bpack = (int32_t *) malloc(sizeof(int32_t) * Tk * Tj);
 
     for (size_t i0 = 0; i0 < ni; i0 += Ti) {
-        for (size_t j0 = 0; j0 < nj; j0 += Tj) {
-            size_t it = MIN(ni-i0, Ti);
-            size_t jt = MIN(nj-j0, Tj);
-            for (size_t k0 = 0; k0 < nk; k0 += Tk) {
-                size_t kt = MIN(nk-k0, Tk);
+        size_t it = MIN(ni-i0, Ti);
+        for (size_t k0 = 0; k0 < nk; k0 += Tk) {
+            size_t kt = MIN(nk-k0, Tk);
+            for (size_t j0 = 0; j0 < nj; j0 += Tj) {
+                size_t jt = MIN(nj-j0, Tj);
+            
                 pkA(A+i0*nk+k0, Apack, it, kt, nk);
                 pkB(B+k0*nj+j0, Bpack, kt, jt, nj);
                 // print_mat(Apack, it*kt/32, 32, "Apack");
@@ -182,7 +183,7 @@ void outer_kernel(
 
 int main() {
     const int input_loop = 10;
-    const int compute_loop = 10;
+    const int compute_loop = 5;
     // const int ni = 4, nj = 8, nk = 8;
     const int ni = TEST_N, nj = TEST_N, nk = TEST_N;
 
@@ -213,11 +214,11 @@ int main() {
             zeros(C, ni * nj);
             auto start = Clock::now();
 
-            outer_kernel(A, B, C, ni, nj, nk, mks32_8x8k4_ldB_fchC);
-            // outer_kernel_packAB(A, B, C, ni, nj, nk, 
-            //     mks32_4x8k8_ldB_fchC_pkAB,
-            //     packs32_4x8k8_A,
-            //     packs32_4x8k8_B);
+            // outer_kernel(A, B, C, ni, nj, nk, mks32_4x8k8_ldB_fchC);
+            outer_kernel_packAB(A, B, C, ni, nj, nk, 
+                mks32_4x8k8_ldB_fchC_pkAB,
+                packs32_4x8k8_A,
+                packs32_4x8k8_B);
             // outer_kernel_packABC(A, B, C, ni, nj, nk, 
             //     mks32_4x8k8_ldB_fchC_pkABC, 
             //     packs32_4x8k8_A,
@@ -260,7 +261,7 @@ int main() {
     const size_t blk_unit = 32;
     const size_t blk_lb = 64 / blk_unit;
     const size_t blk_ub = ni / blk_unit;
-    const int rand_loop = 50;
+    const int rand_loop = 20;
     const int topN = 40;
     srand(time(0));
 

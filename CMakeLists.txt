@@ -10,7 +10,7 @@ add_executable(kernels_test ${TEST} ${KERNELS})
 target_include_directories(kernels_test PUBLIC ./microkernels)
 
 # compile options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -Wall -Wextra -g -falign-loops -march=native -ffast-math -fopenmp")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -falign-loops -march=native -ffast-math -fopenmp -Wall -Wextra -g ")
 
 # add_compile_options(-static)
 # add_compile_options(-funroll-loops)
