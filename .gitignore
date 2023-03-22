@@ -9,3 +9,5 @@ output
 *.txt
 
 Makefile_
+build.sh
+run.sh
