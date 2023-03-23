@@ -44,7 +44,7 @@ bool is_equal(const Cord<tp>* a, const Cord<tp>* b) {
 //注意：目前的版本下，调用本函数之后，C作为一个指针会改变其所指的位置。这可能有所不妥？
 //当前版本下，一次乘法可能需要四次转换存储方式。可能有更好的方法。
 template<typename tp>
-void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>* _C) {
+void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>*& _C) {
 	// 预处理
 	const dc_sparce_matrix<tp>* A, * B, * C;
 	if (_A->trans) {
