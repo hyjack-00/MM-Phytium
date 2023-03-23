@@ -59,7 +59,7 @@ int main() {
         dc_sparce_matrix<int> A_dcsp(A_dcsp0, 1);
         dc_sparce_matrix<int> B_dcsp(B_dcsp0, 1);
 
-        // C 暂时采用堆内存（不合理），见 transfer.h 的
+        // C 暂时采用堆内存（不合理），见 transfer.h @55
         sparce_matrix<int> *C_sp;
         dc_sparce_matrix<int> *C_dcsp;
 
@@ -67,10 +67,11 @@ int main() {
         double total_time1 = 0;
         for (int compute = 0; compute < compute_loop; compute ++) {
             C_sp = new sparce_matrix<int>(C, ni, nj, 1);
-            C_dcsp = new dc_sparce_matrix<int>(*C_sp);
+            dc_sparce_matrix<int> C_dcsp0(*C_sp);
+            C_dcsp = new dc_sparce_matrix<int>(C_dcsp0, 0);
             auto start = Clock::now();
 
-            // dcgemm(&A_dcsp, &B_dcsp, C_dcsp);
+            dcgemm(&A_dcsp, &B_dcsp, C_dcsp);
 
             auto end = Clock::now();
             double dur = Dur(start, end);
