@@ -52,13 +52,45 @@ ostream& operator<<(ostream& output, vector<tp>* a)
 	return output;
 }
 
+/* 关于内存管理
+	1. 矩阵中的数组数据是堆数据，但矩阵对象本身是无论以栈 / 堆存储的
+		- dcgemm 函数为例，如果 C 是栈上对象会错误
+		  传入的 C 指针会被改变为指向新的堆内存，但这个指针只是表示栈位置的临时值
+		- 应当：
+			- 实现好矩阵对象的赋值运算符，做好旧内存的释放
+			- 矩阵对象应全部以 直接引用 & 传入
+			- dcgemm 内部的中间矩阵对象全部使用局部栈上内存，运算结果赋值给 C 的引用
+
+	2. 大部分情况下，对象本身的内存由用户方处理，输入的内存不应当由库函数释放
+	  	- 通过其他类型的输入矩阵的 “转换构造函数”，const 输入矩阵 √
+		- 需要 “赋值运算符”，const 输入矩阵 !
+		- 可能需要 “类型转换运算符”，const 输入矩阵 !
+		- 可能需要 类型转移转换函数（友元），需要销毁输入矩阵 !
+		- 销毁矩阵 .clear() 应当是清空对象指向的堆数据，但对象本身的内存不能被清除
+	
+	3. gemm 函数究竟是使用哪种形式？
+		- `C1 = gemm(const A, const B, const C); `
+		- `gemm(const A, const B, C); `  √ 只要处理好 C 的内存
+
+	-- Huangyj 
+*/
+
 template<typename tp>
 struct sparce_matrix {
-	cui row;//只要大于row_index里的所有值就可以了
+	/* 使用 const 值会导致赋值构造默认被禁止 -- Huangyj */
+	uint row;//只要大于row_index里的所有值就可以了
 	vector<tp>* data;
 	vector<uint>* row_index;//同一列里的行号
 	vector<uint>* col_range;//哪些是同一列的
 	bool trans; // 如果是0，就是csc，否则是csr（相当于存储转置的csc）
+
+	sparce_matrix() {
+		row = 0;
+		data = nullptr;
+		row_index = nullptr;
+		col_range = nullptr;
+		trans = 0;
+	}
 
 	//一个空的矩阵
 	sparce_matrix(cui row_num, const bool& transport):row(row_num),trans(transport) {

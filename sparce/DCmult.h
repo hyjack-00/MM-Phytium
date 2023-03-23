@@ -44,7 +44,7 @@ bool is_equal(const Cord<tp>* a, const Cord<tp>* b) {
 //注意：目前的版本下，调用本函数之后，C作为一个指针会改变其所指的位置。这可能有所不妥？
 //当前版本下，一次乘法可能需要四次转换存储方式。可能有更好的方法。
 template<typename tp>
-void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>*& _C) {
+void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>* _C) {
 	// 预处理
 	const dc_sparce_matrix<tp>* A, * B, * C;
 	if (_A->trans) {
@@ -139,6 +139,20 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 		delete C1;
 	}
 	return;
+
+	/* 
+		如果采用返回值的写法，输入的 _C 矩阵内存不应该由 gemm 函数释放，而是应当由创建矩阵的用户方处理 
+		-- by Huangyj
+	*/
+	// dc_sparce_matrix<tp>* C1 = new dc_sparce_matrix<tp>(final_result.begin(), final_result.end(), 1);
+	// if (_C->trans) {
+	// 	return C1;
+	// }else{
+	// 	dc_sparce_matrix<tp>* C1_temp = new dc_sparce_matrix<tp>(*C1, 1);
+	// 	delete C1;
+	// 	return C1_temp;
+	// }
+	// return nullptr;
 }
 
 #endif // !DOUBLE_COMPRESSED_SPARSE_MULT
