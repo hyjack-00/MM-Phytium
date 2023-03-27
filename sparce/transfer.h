@@ -21,14 +21,14 @@ vector<tp>* init_with_reserve(uint size) {
 	return a;
 }
 
-//×¢Òâ£ºrd()ÊÇÒ»¸öÎŞ·ûºÅÕûÊı
+//æ³¨æ„ï¼šrd()æ˜¯ä¸€ä¸ªæ— ç¬¦å·æ•´æ•°
 template<typename tp>
 void init_random(tp* a, cui row, cui col) {
 	random_device rd;
 	uint size = row * col;
 	uint zerorow = rd() % row;
 	uint zerocol = rd() % col;
-	//³õÊ¼»¯Á½¸ö¶şÎ¬Êı×é
+	//åˆå§‹åŒ–ä¸¤ä¸ªäºŒç»´æ•°ç»„
 	for (uint i = 0; i < row; ++i) {
 		for (uint j = 0; j < col; j++) {
 			a[i * col + j] = (((i - zerorow) * (j - zerocol)) ? (tp)rd() : 0);
@@ -52,37 +52,37 @@ ostream& operator<<(ostream& output, vector<tp>* a)
 	return output;
 }
 
-/* ¹ØÓÚÄÚ´æ¹ÜÀí
-	1. ¾ØÕóÖĞµÄÊı×éÊı¾İÊÇ¶ÑÊı¾İ£¬µ«¾ØÕó¶ÔÏó±¾ÉíÊÇÎŞÂÛÒÔÕ» / ¶Ñ´æ´¢µÄ
-		- dcgemm º¯ÊıÎªÀı£¬Èç¹û C ÊÇÕ»ÉÏ¶ÔÏó»á´íÎó
-		  ´«ÈëµÄ C Ö¸Õë»á±»¸Ä±äÎªÖ¸ÏòĞÂµÄ¶ÑÄÚ´æ£¬µ«Õâ¸öÖ¸ÕëÖ»ÊÇ±íÊ¾Õ»Î»ÖÃµÄÁÙÊ±Öµ
-		- Ó¦µ±£º
-			- ÊµÏÖºÃ¾ØÕó¶ÔÏóµÄ¸³ÖµÔËËã·û£¬×öºÃ¾ÉÄÚ´æµÄÊÍ·Å
-			- ¾ØÕó¶ÔÏóÓ¦È«²¿ÒÔ Ö±½ÓÒıÓÃ & ´«Èë
-			- dcgemm ÄÚ²¿µÄÖĞ¼ä¾ØÕó¶ÔÏóÈ«²¿Ê¹ÓÃ¾Ö²¿Õ»ÉÏÄÚ´æ£¬ÔËËã½á¹û¸³Öµ¸ø C µÄÒıÓÃ
+/* å…³äºå†…å­˜ç®¡ç†
+	1. çŸ©é˜µä¸­çš„æ•°ç»„æ•°æ®æ˜¯å †æ•°æ®ï¼Œä½†çŸ©é˜µå¯¹è±¡æœ¬èº«æ˜¯æ— è®ºä»¥æ ˆ / å †å­˜å‚¨çš„
+		- dcgemm å‡½æ•°ä¸ºä¾‹ï¼Œå¦‚æœ C æ˜¯æ ˆä¸Šå¯¹è±¡ä¼šé”™è¯¯
+		  ä¼ å…¥çš„ C æŒ‡é’ˆä¼šè¢«æ”¹å˜ä¸ºæŒ‡å‘æ–°çš„å †å†…å­˜ï¼Œä½†è¿™ä¸ªæŒ‡é’ˆåªæ˜¯è¡¨ç¤ºæ ˆä½ç½®çš„ä¸´æ—¶å€¼
+		- åº”å½“ï¼š
+			- å®ç°å¥½çŸ©é˜µå¯¹è±¡çš„èµ‹å€¼è¿ç®—ç¬¦ï¼Œåšå¥½æ—§å†…å­˜çš„é‡Šæ”¾
+			- çŸ©é˜µå¯¹è±¡åº”å…¨éƒ¨ä»¥ ç›´æ¥å¼•ç”¨ & ä¼ å…¥
+			- dcgemm å†…éƒ¨çš„ä¸­é—´çŸ©é˜µå¯¹è±¡å…¨éƒ¨ä½¿ç”¨å±€éƒ¨æ ˆä¸Šå†…å­˜ï¼Œè¿ç®—ç»“æœèµ‹å€¼ç»™ C çš„å¼•ç”¨
 
-	2. ´ó²¿·ÖÇé¿öÏÂ£¬¶ÔÏó±¾ÉíµÄÄÚ´æÓÉÓÃ»§·½´¦Àí£¬ÊäÈëµÄÄÚ´æ²»Ó¦µ±ÓÉ¿âº¯ÊıÊÍ·Å
-	  	- Í¨¹ıÆäËûÀàĞÍµÄÊäÈë¾ØÕóµÄ ¡°×ª»»¹¹Ôìº¯Êı¡±£¬const ÊäÈë¾ØÕó ¡Ì
-		- ĞèÒª ¡°¸³ÖµÔËËã·û¡±£¬const ÊäÈë¾ØÕó !
-		- ¿ÉÄÜĞèÒª ¡°ÀàĞÍ×ª»»ÔËËã·û¡±£¬const ÊäÈë¾ØÕó !
-		- ¿ÉÄÜĞèÒª ÀàĞÍ×ªÒÆ×ª»»º¯Êı£¨ÓÑÔª£©£¬ĞèÒªÏú»ÙÊäÈë¾ØÕó !
-		- Ïú»Ù¾ØÕó .clear() Ó¦µ±ÊÇÇå¿Õ¶ÔÏóÖ¸ÏòµÄ¶ÑÊı¾İ£¬µ«¶ÔÏó±¾ÉíµÄÄÚ´æ²»ÄÜ±»Çå³ı
+	2. å¤§éƒ¨åˆ†æƒ…å†µä¸‹ï¼Œå¯¹è±¡æœ¬èº«çš„å†…å­˜ç”±ç”¨æˆ·æ–¹å¤„ç†ï¼Œè¾“å…¥çš„å†…å­˜ä¸åº”å½“ç”±åº“å‡½æ•°é‡Šæ”¾
+	  	- é€šè¿‡å…¶ä»–ç±»å‹çš„è¾“å…¥çŸ©é˜µçš„ â€œè½¬æ¢æ„é€ å‡½æ•°â€ï¼Œconst è¾“å…¥çŸ©é˜µ âˆš
+		- éœ€è¦ â€œèµ‹å€¼è¿ç®—ç¬¦â€ï¼Œconst è¾“å…¥çŸ©é˜µ !
+		- å¯èƒ½éœ€è¦ â€œç±»å‹è½¬æ¢è¿ç®—ç¬¦â€ï¼Œconst è¾“å…¥çŸ©é˜µ !
+		- å¯èƒ½éœ€è¦ ç±»å‹è½¬ç§»è½¬æ¢å‡½æ•°ï¼ˆå‹å…ƒï¼‰ï¼Œéœ€è¦é”€æ¯è¾“å…¥çŸ©é˜µ !
+		- é”€æ¯çŸ©é˜µ .clear() åº”å½“æ˜¯æ¸…ç©ºå¯¹è±¡æŒ‡å‘çš„å †æ•°æ®ï¼Œä½†å¯¹è±¡æœ¬èº«çš„å†…å­˜ä¸èƒ½è¢«æ¸…é™¤
 	
-	3. gemm º¯Êı¾¿¾¹ÊÇÊ¹ÓÃÄÄÖÖĞÎÊ½£¿
+	3. gemm å‡½æ•°ç©¶ç«Ÿæ˜¯ä½¿ç”¨å“ªç§å½¢å¼ï¼Ÿ
 		- `C1 = gemm(const A, const B, const C); `
-		- `gemm(const A, const B, C); `  ¡Ì Ö»Òª´¦ÀíºÃ C µÄÄÚ´æ
+		- `gemm(const A, const B, C); `  âˆš åªè¦å¤„ç†å¥½ C çš„å†…å­˜
 
 	-- Huangyj 
 */
 
 template<typename tp>
 struct sparce_matrix {
-	/* Ê¹ÓÃ const Öµ»áµ¼ÖÂ¸³Öµ¹¹ÔìÄ¬ÈÏ±»½ûÖ¹ -- Huangyj */
-	uint row;//Ö»Òª´óÓÚrow_indexÀïµÄËùÓĞÖµ¾Í¿ÉÒÔÁË
+	/* ä½¿ç”¨ const å€¼ä¼šå¯¼è‡´èµ‹å€¼æ„é€ é»˜è®¤è¢«ç¦æ­¢ -- Huangyj */
+	uint row;//åªè¦å¤§äºrow_indexé‡Œçš„æ‰€æœ‰å€¼å°±å¯ä»¥äº†
 	vector<tp>* data;
-	vector<uint>* row_index;//Í¬Ò»ÁĞÀïµÄĞĞºÅ
-	vector<uint>* col_range;//ÄÄĞ©ÊÇÍ¬Ò»ÁĞµÄ
-	bool trans; // Èç¹ûÊÇ0£¬¾ÍÊÇcsc£¬·ñÔòÊÇcsr£¨Ïàµ±ÓÚ´æ´¢×ªÖÃµÄcsc£©
+	vector<uint>* row_index;//åŒä¸€åˆ—é‡Œçš„è¡Œå·
+	vector<uint>* col_range;//å“ªäº›æ˜¯åŒä¸€åˆ—çš„
+	bool trans; // å¦‚æœæ˜¯0ï¼Œå°±æ˜¯cscï¼Œå¦åˆ™æ˜¯csrï¼ˆç›¸å½“äºå­˜å‚¨è½¬ç½®çš„cscï¼‰
 
 	sparce_matrix() {
 		row = 0;
@@ -92,7 +92,7 @@ struct sparce_matrix {
 		trans = 0;
 	}
 
-	//Ò»¸ö¿ÕµÄ¾ØÕó
+	//ä¸€ä¸ªç©ºçš„çŸ©é˜µ
 	sparce_matrix(cui row_num, const bool& transport):row(row_num),trans(transport) {
 		data = new vector<tp>;
 		row_index = new vector<uint>;
@@ -141,19 +141,19 @@ struct sparce_matrix {
 		}
 	}
 
-	//×¢£ºtrans==1ÒâÎ¶×ÅËü»áÒÔÁíÒ»ÖÖ´æ´¢·½Ê½´æ´¢¡£µ«ÊÇÁ½¸ö¾ØÕóÂß¼­ÉÏÊÇÏàµÈµÄ¡£
+	//æ³¨ï¼štrans==1æ„å‘³ç€å®ƒä¼šä»¥å¦ä¸€ç§å­˜å‚¨æ–¹å¼å­˜å‚¨ã€‚ä½†æ˜¯ä¸¤ä¸ªçŸ©é˜µé€»è¾‘ä¸Šæ˜¯ç›¸ç­‰çš„ã€‚
 	sparce_matrix(const sparce_matrix<tp>* a,const bool& transpose) :row(transpose ? a->col() : a->row) {
 		if (transpose) {
 			data = new vector<tp>(a->nnz(), 0);
 			trans = !a->trans;
 			row_index = new vector<uint>(a->nnz(), 0);
 
-			//´´½¨Ò»Ğ©ÁÙÊ±Êı×é:col_num´ú±íA×ªÖÃµÄÕâÒ»ÁĞÉÏÓĞ¶àÉÙÔªËØ
+			//åˆ›å»ºä¸€äº›ä¸´æ—¶æ•°ç»„:col_numä»£è¡¨Aè½¬ç½®çš„è¿™ä¸€åˆ—ä¸Šæœ‰å¤šå°‘å…ƒç´ 
 			vector<uint>* col_num = new vector<uint>(a->row, 0);
 			for (uint ri = 0; ri < a->nnz(); ri++) {
 				col_num->at(a->row_index->at(ri)) += 1;
 			}
-			uint* col_now = new uint[a->row + 1];//Õâ¸öÊÇÎªÁËµÈ»á¼ÇÂ¼Ã¿¸ödata²åÈëµÄÎ»ÖÃ¡£
+			uint* col_now = new uint[a->row + 1];//è¿™ä¸ªæ˜¯ä¸ºäº†ç­‰ä¼šè®°å½•æ¯ä¸ªdataæ’å…¥çš„ä½ç½®ã€‚
 			uint tmp = 0;
 			for (uint it = 0; it != a->row; it++) {
 				col_now[it] = tmp;
@@ -163,7 +163,7 @@ struct sparce_matrix {
 			col_range = new vector<uint>(col_now, col_now + a->row + 1);
 
 
-			//²åÈëdata
+			//æ’å…¥data
 			for (uint col = 0; col < a->col(); col++) {
 				for (uint row = a->col_range->at(col); row < a->col_range->at(col + 1); row++) {
 					data->at(col_now[a->row_index->at(row)]) = a->data->at(row);
@@ -180,7 +180,7 @@ struct sparce_matrix {
 		}
 	}
 
-	//×¢Òâ£ºÄ¬ÈÏĞĞºÅµİÔö£¬ÇÒÖ±½ÓÌî³ä½øÏÂÒ»ÁĞ¡£µ«²»ÒªÇó·Ç¿Õ¡£
+	//æ³¨æ„ï¼šé»˜è®¤è¡Œå·é€’å¢ï¼Œä¸”ç›´æ¥å¡«å……è¿›ä¸‹ä¸€åˆ—ã€‚ä½†ä¸è¦æ±‚éç©ºã€‚
 	template<class InputIterator>
 	void append_col(InputIterator begin, InputIterator end) {
 		while (begin != end) {
@@ -230,10 +230,10 @@ struct sparce_matrix {
 template<typename tp>
 struct dc_sparce_matrix {
 	vector<tp>* data;
-	vector<uint>* row_index;//Í¬Ò»ÁĞÀïµÄĞĞºÅ
-	vector<uint>* col_range;//ĞĞºÅÀïÄÄĞ©ÊÇÍ¬Ò»ÁĞµÄ
-	vector<uint>* col_index;//ÉÏÃæµÄ·¶Î§ÊÇÄÄĞ©ÁĞµÄ
-	bool trans; // Èç¹ûÊÇ0£¬¾ÍÊÇdcsc£¬·ñÔòÊÇdcsr£¨Ïàµ±ÓÚ´æ´¢×ªÖÃµÄcsc£©
+	vector<uint>* row_index;//åŒä¸€åˆ—é‡Œçš„è¡Œå·
+	vector<uint>* col_range;//è¡Œå·é‡Œå“ªäº›æ˜¯åŒä¸€åˆ—çš„
+	vector<uint>* col_index;//ä¸Šé¢çš„èŒƒå›´æ˜¯å“ªäº›åˆ—çš„
+	bool trans; // å¦‚æœæ˜¯0ï¼Œå°±æ˜¯dcscï¼Œå¦åˆ™æ˜¯dcsrï¼ˆç›¸å½“äºå­˜å‚¨è½¬ç½®çš„cscï¼‰
 
 	dc_sparce_matrix() {
 		trans = 0;
@@ -271,7 +271,7 @@ struct dc_sparce_matrix {
 			trans = !a.trans;
 			row_index = new vector<uint>(a.nnz(), 0);
 
-			//´´½¨Ò»Ğ©ÁÙÊ±Êı×é
+			//åˆ›å»ºä¸€äº›ä¸´æ—¶æ•°ç»„
 			map<uint, uint>* num = new map<uint, uint>;
 			for (uint ri = 0; ri < a.nnz(); ri++) {
 				if (num->find(a.row_index->at(ri)) == num->end()) {
@@ -283,7 +283,7 @@ struct dc_sparce_matrix {
 			}
 			col_index = init_with_reserve<uint>(num->size());
 			col_range = init_with_reserve<uint>(num->size() + 1);
-			unordered_map<uint, uint>* col_now = new unordered_map<uint, uint>;//Õâ¸öÊÇÎªÁËµÈ»á¼ÇÂ¼Ã¿¸ödata²åÈëµÄÎ»ÖÃ¡£
+			unordered_map<uint, uint>* col_now = new unordered_map<uint, uint>;//è¿™ä¸ªæ˜¯ä¸ºäº†ç­‰ä¼šè®°å½•æ¯ä¸ªdataæ’å…¥çš„ä½ç½®ã€‚
 			col_range->push_back(0);
 			for (auto it = num->begin(); it != num->end(); it++) {
 				col_now->insert(pair<uint, uint>(it->first, col_range->back()));
@@ -292,7 +292,7 @@ struct dc_sparce_matrix {
 				
 			}
 			
-			//²åÈëdata
+			//æ’å…¥data
 			for (uint col = 0; col < a.col_index->size(); col++) {
 				for (uint row = a.col_range->at(col); row < a.col_range->at(col + 1); row++) {
 					data->at(col_now->at(a.row_index->at(row))) = a.data->at(row);
@@ -310,7 +310,7 @@ struct dc_sparce_matrix {
 		}
 	}
 
-	//Í¨¹ıÊäÈëµÄ·ûºÏ×ÖµäĞòµÄ×ø±êÈıÔª×é¹¹½¨¡£
+	//é€šè¿‡è¾“å…¥çš„ç¬¦åˆå­—å…¸åºçš„åæ ‡ä¸‰å…ƒç»„æ„å»ºã€‚
 	template<class InputIterator>
 	dc_sparce_matrix(InputIterator begin, InputIterator end, const bool& transpose = false) {
 		trans = transpose;

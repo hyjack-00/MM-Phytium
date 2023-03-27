@@ -99,16 +99,6 @@ void rand_mat_f32(float *mat, int length_1d, unsigned int seed) {
 
 //## sparce matrix
 // 使用一维数组存储的稀疏矩阵
-void rand_sparce_array_s32(int *mat, int ni, int nj, double density, unsigned int seed) {
-    srand(seed);
-    zeros_s32(mat, ni*nj);
-    int nnz = ni * nj * density;
-    for (int elem = 0; elem < nnz; elem ++) {
-        int i = rand() % ni;
-        int j = rand() % nj;
-        mat[i*nj + j] = (rand() % (RAND_UB - RAND_LB)) + RAND_LB;
-    }
-}
 void rand_sparce_array_s32(int *mat, int length_1d, double density, unsigned int seed) {
     srand(seed);
     zeros_s32(mat, length_1d);
@@ -117,4 +107,7 @@ void rand_sparce_array_s32(int *mat, int length_1d, double density, unsigned int
         int idx = rand() % length_1d;
         mat[idx] = (rand() % (RAND_UB - RAND_LB)) + RAND_LB;
     }
+}
+void rand_sparce_array_s32(int *mat, int ni, int nj, double density, unsigned int seed) {
+    rand_sparce_array_s32(mat, ni*nj, density, seed);
 }

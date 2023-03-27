@@ -71,7 +71,7 @@ int main() {
             C_dcsp = new dc_sparce_matrix<int>(C_dcsp0, 0);
             auto start = Clock::now();
 
-            // dcgemm(&A_dcsp, &B_dcsp, C_dcsp);
+            dcgemm(&A_dcsp, &B_dcsp, C_dcsp);
 
             auto end = Clock::now();
             double dur = Dur(start, end);
