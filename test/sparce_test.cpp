@@ -5,8 +5,8 @@
 #include <time.h>
 #include <omp.h>
 
-#include "basic_test.h"
-#include "DCmult.h"
+#include "test_helpers.h"
+#include "DCmult.h" 
 #include "Cmult.h"
 
 #define FILE_OUTPUT false  // 是否输出从 stdout 转到 文件
