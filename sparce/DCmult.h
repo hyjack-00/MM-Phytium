@@ -76,20 +76,21 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 			c_ele->push(a);
 		}
 	}
-	mid_results->push_back(c_ele);
-
+	if (!c_ele->empty()) {
+		mid_results->push_back(c_ele);
+	}
 	uint a = 0, b = 0;//逻辑指针
 	while (a != A->nzc() && b != B->nzc()) {
 		if ((*(A->col_index))[a] == (*(B->col_index))[b]) {
 			queue<Cord<tp>*>* desc_res = new queue<Cord<tp>*>;
-			mid_results->push_back(desc_res);
 			//生成A的一列和B的一列乘出来的笛卡尔积。
 			for (uint i = (*(A->col_range))[a]; i < (*(A->col_range))[a + 1]; i++) {
 				for (uint j = (*(B->col_range))[b]; j < (*(B->col_range))[b + 1]; j++) {
-					Cord<tp>* a = new Cord<tp>(A->row_index->at(i), B->row_index->at(j), (A->data->at(i) * B->data->at(j)), mid_results->size()-1);
+					Cord<tp>* a = new Cord<tp>(A->row_index->at(i), B->row_index->at(j), (A->data->at(i) * B->data->at(j)), mid_results->size());
 					desc_res->push(a);
 				}
 			}
+			mid_results->push_back(desc_res);
 			a++;
 			b++;
 		}
@@ -105,7 +106,7 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 	deque<Cord<tp>*> final_result;
 	for (uint i = 0; i < mid_results->size(); i++) {
 		compare_result.push(mid_results->at(i)->front());
-		(*mid_results)[i]->pop();
+		mid_results->at(i)->pop();
 	}
 
 	while (!compare_result.empty()) {
