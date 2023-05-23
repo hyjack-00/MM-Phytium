@@ -1,5 +1,19 @@
 # MM-Phytium
+
 Matrix-Multiplication-Library-on-Phytium
+
+# 工具
+
+## 编译运行脚本
+
+如果按照 huangyj 的 cmake 项目结构，编译的命令如下，具体的编译选项见 `CMakeLists.txt`
+
+```shell
+cd build
+cmake ..
+make
+cd ..
+```
 
 # 硬件峰值
 
@@ -25,11 +39,9 @@ perf: 9.194918 GIPS
 
 以 `int32` 下的 1024-1024-1024 矩阵大小为例，共需要 2G 条计算指令，极限用时 0.05 s 左右。
 
-# 结果记录 
+# 稠密矩阵乘 s32
 
-## 稠密矩阵乘 s32
-
-### 不同 microkernels 的性能
+## 不同 microkernels 的性能
 
 - 时间单位 msec ，1024^3 的极限大约 54.45 msecs
 - `i/4` 表示对 i 分块进行简单并行
@@ -55,7 +67,7 @@ perf: 9.194918 GIPS
 
 似乎 280 ms 已经是极限了
 
-### 不同矩阵大小下的性能
+## 不同矩阵大小下的性能
 best: `4x8k8_ldB_fchC_pkAB` ：
 
 |           | 256^3    | 512^3    | 768^3    | 1024^3   | 1536^3   | 2048^3   | 4096^3   |
@@ -67,13 +79,43 @@ best: `4x8k8_ldB_fchC_pkAB` ：
 waiting for parallelization 
 
 
-### 优化分块大小
+## 优化分块大小
 暂时只测试了 512^3, 1024^3, 1536^3 的矩阵乘法
 
 - `Ti, Tj` 的最优取值范围较广，对于 N^3 类型矩阵乘法基本在 N/2 附近的值都有较高性能
 - `Tk` 应当取 256
 
 
+
+# 稀疏矩阵乘
+
+## 性能分析
+
+Perf 的结果
+
+```
+Samples: 11K of event 'cycles:ppp', Event count (approx.): 26682106052
+Overhead  Command      Shared Object Symbol
+-----------------------------------------------
+28.76%  sparce_test  sparce_test          [.] std::__push_heap<__gnu_cxx::__normal_iterator<Cord<int>**, ...
+22.50%  sparce_test  sparce_test          [.] std::__adjust_heap<__gnu_cxx::__normal_iterator<Cord<int>**, ...
+21.44%  sparce_test  sparce_test          [.] dcgemm<int>
+10.53%  sparce_test  libc-2.23.so         [.] malloc
+-----------------------------------------------
+1.34%  sparce_test  sparce_test           [.] dc_sparce_matrix<int>::dc_sparce_matrix
+1.11%  sparce_test  [kernel.kallsyms]     [k] clear_page                             
+0.98%  sparce_test  libc-2.23.so          [.] 0x000000000007021c                     
+0.64%  sparce_test  libc-2.23.so          [.] 0x000000000007019c                     
+0.53%  sparce_test  libc-2.23.so          [.] 0x0000000000070200                     
+0.51%  sparce_test  sparce_test           [.] main                                   
+0.42%  sparce_test  libc-2.23.so          [.] 0x0000000000070380                     
+0.38%  sparce_test  libc-2.23.so          [.] 0x0000000000070974                     
+0.35%  sparce_test  libstdc++.so.6.0.21   [.] operator new                           
+0.32%  sparce_test  libstdc++.so.6.0.21   [.] _ZNSt6locale21_S_normalize_categoryEi@plt
+0.30%  sparce_test  libc-2.23.so          [.] 0x0000000000070230
+0.28%  sparce_test  libc-2.23.so          [.] 0x0000000000070b00
+....
+```
 
 # 想法
 

@@ -78,11 +78,11 @@ ostream& operator<<(ostream& output, vector<tp>* a)
 template<typename tp>
 struct sparce_matrix {
 	/* 使用 const 值会导致赋值构造默认被禁止 -- Huangyj */
-	uint row;//只要大于row_index里的所有值就可以了
+	uint row;                 // 只要大于row_index里的所有值就可以了
 	vector<tp>* data;
-	vector<uint>* row_index;//同一列里的行号
-	vector<uint>* col_range;//哪些是同一列的
-	bool trans; // 如果是0，就是csc，否则是csr（相当于存储转置的csc）
+	vector<uint>* row_index;  // 同一列里的行号
+	vector<uint>* col_range;  // 哪些是同一列的
+	bool trans;               // 如果是0，就是csc，否则是csr（相当于存储转置的csc）
 
 	sparce_matrix() {
 		row = 0;
@@ -93,14 +93,14 @@ struct sparce_matrix {
 	}
 
 	//一个空的矩阵
-	sparce_matrix(cui row_num, const bool& transport):row(row_num),trans(transport) {
+	sparce_matrix(cui row_num, const bool& transport) : row(row_num), trans(transport) {
 		data = new vector<tp>;
 		row_index = new vector<uint>;
 		col_range = new vector<uint>(1,0);
 	}
 
 	// init from a dense matrix
-	sparce_matrix(const tp* A, cui r, cui c, bool tr) : trans(tr), row(tr ? c : r) {
+	sparce_matrix(const tp* A, cui r, cui c, bool tr) : row(tr?c:r), trans(tr) {
 		if (trans) {
 			data = new vector<tp>;
 			row_index = new vector<uint>;
@@ -142,7 +142,7 @@ struct sparce_matrix {
 	}
 
 	//注：trans==1意味着它会以另一种存储方式存储。但是两个矩阵逻辑上是相等的。
-	sparce_matrix(const sparce_matrix<tp>* a,const bool& transpose) :row(transpose ? a->col() : a->row) {
+	sparce_matrix(const sparce_matrix<tp>* a,const bool& transpose) : row(transpose ? a->col() : a->row) {
 		if (transpose) {
 			data = new vector<tp>(a->nnz(), 0);
 			trans = !a->trans;
@@ -174,9 +174,9 @@ struct sparce_matrix {
 		}
 		else {
 			data = new vector<tp>(a->data->begin(), a->data->end());
-			trans = a->trans;
 			row_index = new vector<uint>(a->row_index->begin(), a->row_index->end());
 			col_range = new vector<uint>(a->col_range->begin(), a->col_range->end());
+			trans = a->trans;
 		}
 	}
 

@@ -14,9 +14,11 @@ typedef const unsigned int cui;
 
 template<typename tp>
 struct Cord {
-	uint row, col, sign;//sign是为了在merge的时候，提示这个元素来自哪次结果
+	uint row, col;
 	tp data;
-	Cord(cui row_index, cui col_index, const tp d, cui s) :row(row_index), col(col_index), data(d), sign(s){}
+	uint sign;  // 为了在merge的时候，提示这个元素来自哪次结果
+	Cord(cui row_index, cui col_index, const tp d, cui s) : 
+		row(row_index), col(col_index), data(d), sign(s) {}
 };
 
 template<typename tp>
