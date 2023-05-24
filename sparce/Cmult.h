@@ -12,7 +12,7 @@
 
 template<typename tp>
 struct halfCord {
-	uint row, sign;//signÊÇÎªÁËÔÚmergeµÄÊ±ºò£¬ÌáÊ¾Õâ¸öÔªËØÀ´×ÔÄÄ´Î½á¹û
+	uint row, sign;//signæ˜¯ä¸ºäº†åœ¨mergeçš„æ—¶å€™ï¼Œæç¤ºè¿™ä¸ªå…ƒç´ æ¥è‡ªå“ªæ¬¡ç»“æœ
 	tp data;
 	halfCord(cui row_index, const tp d, cui s) :row(row_index), data(d), sign(s) {}
 };
@@ -38,7 +38,7 @@ bool is_equal2(const halfCord<tp>* a, const halfCord<tp>* b) {
 	return (a->row == b->row);
 }
 
-//»á¸Ä±ä_CµÄÖ¸Ïò
+//ä¼šæ”¹å˜_Cçš„æŒ‡å‘
 template<typename tp>
 void cgemm(const sparce_matrix<tp>* _A, const sparce_matrix<tp>* _B, sparce_matrix<tp>*& _C) {
 	const sparce_matrix<tp>* A, * B, * C;
@@ -64,11 +64,11 @@ void cgemm(const sparce_matrix<tp>* _A, const sparce_matrix<tp>* _B, sparce_matr
 	
 	sparce_matrix<tp>* C1 = new sparce_matrix<tp>(A->row, 0);
 
-	//Ïàµ±ÓÚÃ¿´Î×öÒ»¸ö¾ØÕó³ËBµÄÒ»¸öÁĞÏòÁ¿£¬×îºóÖ±½ÓÆ´ÆğÀ´
+	//ç›¸å½“äºæ¯æ¬¡åšä¸€ä¸ªçŸ©é˜µä¹˜Bçš„ä¸€ä¸ªåˆ—å‘é‡ï¼Œæœ€åç›´æ¥æ‹¼èµ·æ¥
 	for (uint i = 0; i < B->col(); i++) {
 		vector<queue<halfCord<tp>*>*>* mid_results = new vector<queue<halfCord<tp>*>*>;
 
-		//ÏÈ°ÑCÀïµÄÖµÊä½øÈ¥£¬×îºó¼Ó
+		//å…ˆæŠŠCé‡Œçš„å€¼è¾“è¿›å»ï¼Œæœ€ååŠ 
 		queue<halfCord<tp>*>* c_ele = new queue<halfCord<tp>*>;
 		for (uint row = C->col_range->at(i); row < C->col_range->at(i + 1); row++) {
 			halfCord<tp>* c = new halfCord<tp>(C->row_index->at(row), C->data->at(row), 0);
@@ -76,7 +76,7 @@ void cgemm(const sparce_matrix<tp>* _A, const sparce_matrix<tp>* _B, sparce_matr
 		}
 		if (!c_ele->empty())mid_results->push_back(c_ele);
 
-		//¶ÔBÔÚÕâÒ»ÁĞÉÏµÄÃ¿Ò»¸ö·ÇÁãÔªµÄĞĞºÅ£¬ÕÒµ½AÖĞÁĞºÅÓëÕâĞ©ĞĞºÅÏàÍ¬µÄÁĞ£¬È»ºóÕâĞ©ÁĞ±»·ÇÁãÔªÊı³Ë
+		//å¯¹Båœ¨è¿™ä¸€åˆ—ä¸Šçš„æ¯ä¸€ä¸ªéé›¶å…ƒçš„è¡Œå·ï¼Œæ‰¾åˆ°Aä¸­åˆ—å·ä¸è¿™äº›è¡Œå·ç›¸åŒçš„åˆ—ï¼Œç„¶åè¿™äº›åˆ—è¢«éé›¶å…ƒæ•°ä¹˜
 		for (uint j = B->col_range->at(i); j < B->col_range->at(i + 1); j++) {
 			queue<halfCord<tp>*>* jcol = new queue<halfCord<tp>*>;
 			for (uint k = A->col_range->at(B->row_index->at(j)); k < A->col_range->at(B->row_index->at(j) + 1); k++) {

@@ -9,7 +9,7 @@
 
 #include <omp.h>
 
-#include "basic_test.h"
+#include "test_helpers.h"
 #include "microkernels.h"
 
 #define FILE_OUTPUT false  // 是否输出从 stdout 到 文件

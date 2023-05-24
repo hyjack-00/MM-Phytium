@@ -14,9 +14,11 @@ typedef const unsigned int cui;
 
 template<typename tp>
 struct Cord {
-	uint row, col, sign;//signÊÇÎªÁËÔÚmergeµÄÊ±ºò£¬ÌáÊ¾Õâ¸öÔªËØÀ´×ÔÄÄ´Î½á¹û
+	uint row, col;
 	tp data;
-	Cord(cui row_index, cui col_index, const tp d, cui s) :row(row_index), col(col_index), data(d), sign(s){}
+	uint sign;  // ä¸ºäº†åœ¨mergeçš„æ—¶å€™ï¼Œæç¤ºè¿™ä¸ªå…ƒç´ æ¥è‡ªå“ªæ¬¡ç»“æœ
+	Cord(cui row_index, cui col_index, const tp d, cui s) : 
+		row(row_index), col(col_index), data(d), sign(s) {}
 };
 
 template<typename tp>
@@ -40,12 +42,12 @@ bool is_equal(const Cord<tp>* a, const Cord<tp>* b) {
 	return (a->col == b->col && a->row == b->row);
 }
 
-//ÕâÀï¼Ù¶¨ABCÊÇÁĞ£¬ĞĞ£¬ĞĞÓÅÏÈ
-//×¢Òâ£ºÄ¿Ç°µÄ°æ±¾ÏÂ£¬µ÷ÓÃ±¾º¯ÊıÖ®ºó£¬C×÷ÎªÒ»¸öÖ¸Õë»á¸Ä±äÆäËùÖ¸µÄÎ»ÖÃ¡£Õâ¿ÉÄÜÓĞËù²»Í×£¿
-//µ±Ç°°æ±¾ÏÂ£¬Ò»´Î³Ë·¨¿ÉÄÜĞèÒªËÄ´Î×ª»»´æ´¢·½Ê½¡£¿ÉÄÜÓĞ¸üºÃµÄ·½·¨¡£
+//è¿™é‡Œå‡å®šABCæ˜¯åˆ—ï¼Œè¡Œï¼Œè¡Œä¼˜å…ˆ
+//æ³¨æ„ï¼šç›®å‰çš„ç‰ˆæœ¬ä¸‹ï¼Œè°ƒç”¨æœ¬å‡½æ•°ä¹‹åï¼ŒCä½œä¸ºä¸€ä¸ªæŒ‡é’ˆä¼šæ”¹å˜å…¶æ‰€æŒ‡çš„ä½ç½®ã€‚è¿™å¯èƒ½æœ‰æ‰€ä¸å¦¥ï¼Ÿ
+//å½“å‰ç‰ˆæœ¬ä¸‹ï¼Œä¸€æ¬¡ä¹˜æ³•å¯èƒ½éœ€è¦å››æ¬¡è½¬æ¢å­˜å‚¨æ–¹å¼ã€‚å¯èƒ½æœ‰æ›´å¥½çš„æ–¹æ³•ã€‚
 template<typename tp>
 void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_sparce_matrix<tp>*& _C) {
-	// Ô¤´¦Àí
+	// é¢„å¤„ç†
 	const dc_sparce_matrix<tp>* A, * B, * C;
 	if (_A->trans) {
 		A = new dc_sparce_matrix<tp>(*_A, 1);
@@ -68,7 +70,7 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 	assert(!A->trans && B->trans && C->trans);
 	vector<queue<Cord<tp>*>*>* mid_results = new vector<queue<Cord<tp>*>*>;
 
-	//ÏÈ°ÑCÀïµÄÖµÊä½øÈ¥£¬×îºó¼Ó
+	//å…ˆæŠŠCé‡Œçš„å€¼è¾“è¿›å»ï¼Œæœ€ååŠ 
 	queue<Cord<tp>*>* c_ele = new queue<Cord<tp>*>;
 	for (uint col = 0; col < C->col_index->size(); col++) {
 		for (uint row = C->col_range->at(col); row < C->col_range->at(col + 1); row++) {
@@ -79,11 +81,11 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 	if (!c_ele->empty()) {
 		mid_results->push_back(c_ele);
 	}
-	uint a = 0, b = 0;//Âß¼­Ö¸Õë
+	uint a = 0, b = 0;//é€»è¾‘æŒ‡é’ˆ
 	while (a != A->nzc() && b != B->nzc()) {
 		if ((*(A->col_index))[a] == (*(B->col_index))[b]) {
 			queue<Cord<tp>*>* desc_res = new queue<Cord<tp>*>;
-			//Éú³ÉAµÄÒ»ÁĞºÍBµÄÒ»ÁĞ³Ë³öÀ´µÄµÑ¿¨¶û»ı¡£
+			//ç”ŸæˆAçš„ä¸€åˆ—å’ŒBçš„ä¸€åˆ—ä¹˜å‡ºæ¥çš„ç¬›å¡å°”ç§¯ã€‚
 			for (uint i = (*(A->col_range))[a]; i < (*(A->col_range))[a + 1]; i++) {
 				for (uint j = (*(B->col_range))[b]; j < (*(B->col_range))[b + 1]; j++) {
 					Cord<tp>* a = new Cord<tp>(A->row_index->at(i), B->row_index->at(j), (A->data->at(i) * B->data->at(j)), mid_results->size());
@@ -129,7 +131,7 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 	if (_B != B) delete B;
 	if (_C != C) delete C;
 
-	//°ÑdequeÀïµÄÊı¾İ×°µ½_CÀï¡£ÕâÀï»áµ¼ÖÂ_C±»¸ÄÎ»ÖÃ¡£¿ÉÄÜÃ»ÓĞ±£³ÖÎ»ÖÃµÄ±ØÒª£¬ËùÒÔÏÈĞ´³ÉÕâÑù.
+	//æŠŠdequeé‡Œçš„æ•°æ®è£…åˆ°_Cé‡Œã€‚è¿™é‡Œä¼šå¯¼è‡´_Cè¢«æ”¹ä½ç½®ã€‚å¯èƒ½æ²¡æœ‰ä¿æŒä½ç½®çš„å¿…è¦ï¼Œæ‰€ä»¥å…ˆå†™æˆè¿™æ ·.
 	dc_sparce_matrix<tp>* C1 = new dc_sparce_matrix<tp>(final_result.begin(), final_result.end(), 1);
 	if (_C->trans) {
 		delete _C;
@@ -142,7 +144,7 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 	return;
 
 	/* 
-		Èç¹û²ÉÓÃ·µ»ØÖµµÄĞ´·¨£¬ÊäÈëµÄ _C ¾ØÕóÄÚ´æ²»Ó¦¸ÃÓÉ gemm º¯ÊıÊÍ·Å£¬¶øÊÇÓ¦µ±ÓÉ´´½¨¾ØÕóµÄÓÃ»§·½´¦Àí 
+		å¦‚æœé‡‡ç”¨è¿”å›å€¼çš„å†™æ³•ï¼Œè¾“å…¥çš„ _C çŸ©é˜µå†…å­˜ä¸åº”è¯¥ç”± gemm å‡½æ•°é‡Šæ”¾ï¼Œè€Œæ˜¯åº”å½“ç”±åˆ›å»ºçŸ©é˜µçš„ç”¨æˆ·æ–¹å¤„ç† 
 		-- by Huangyj
 	*/
 	// dc_sparce_matrix<tp>* C1 = new dc_sparce_matrix<tp>(final_result.begin(), final_result.end(), 1);

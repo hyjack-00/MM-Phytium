@@ -5,8 +5,8 @@
 #include <time.h>
 #include <omp.h>
 
-#include "basic_test.h"
-#include "DCmult.h"
+#include "test_helpers.h"
+#include "DCmult.h" 
 #include "Cmult.h"
 
 #define FILE_OUTPUT false  // 是否输出从 stdout 转到 文件
@@ -25,10 +25,10 @@ string ouput_file = "output/output.dat";
 
 int main() {
     // 参数 2 =======================================
-    const int data_loop = 10;     // 生成新矩阵数据的次数
-    const int compute_loop = 10;  // 每个生成矩阵的计算次数
+    const int data_loop = 1;     // 生成新矩阵数据的次数
+    const int compute_loop = 1;  // 每个生成矩阵的计算次数
     // const int ni = 4, nj = 5, nk = 3;
-    const int ni = 4, nj = 3, nk = 5;
+    const int ni = 400, nj = 300, nk = 500;
 
     OS << "Test start" << endl;
     OS << "Loop: " << data_loop << "x" << compute_loop << endl;
