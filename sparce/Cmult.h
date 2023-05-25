@@ -10,11 +10,18 @@
 #include <map>
 #include <deque>
 
+using std::queue;
+using std::priority_queue;
+using std::deque;
+
+
 template<typename tp>
 struct halfCord {
-	uint row, sign;//sign是为了在merge的时候，提示这个元素来自哪次结果
+	uint row;
 	tp data;
-	halfCord(cui row_index, const tp d, cui s) :row(row_index), data(d), sign(s) {}
+	uint sign;  // 为了在merge的时候，提示这个元素来自哪次结果
+	halfCord(const uint row_index, const tp d, const uint s) :
+		row(row_index), data(d), sign(s) {}
 };
 
 template<typename tp>
@@ -66,7 +73,7 @@ void cgemm(const sparce_matrix<tp>* _A, const sparce_matrix<tp>* _B, sparce_matr
 
 	//相当于每次做一个矩阵乘B的一个列向量，最后直接拼起来
 	for (uint i = 0; i < B->col(); i++) {
-		vector<queue<halfCord<tp>*>*>* mid_results = new vector<queue<halfCord<tp>*>*>;
+		vector<queue<halfCord<tp>*>*> mid_results;
 
 		//先把C里的值输进去，最后加
 		queue<halfCord<tp>*>* c_ele = new queue<halfCord<tp>*>;
@@ -74,7 +81,7 @@ void cgemm(const sparce_matrix<tp>* _A, const sparce_matrix<tp>* _B, sparce_matr
 			halfCord<tp>* c = new halfCord<tp>(C->row_index->at(row), C->data->at(row), 0);
 			c_ele->push(c);
 		}
-		if (!c_ele->empty())mid_results->push_back(c_ele);
+		if (!c_ele->empty()) mid_results.push_back(c_ele);
 
 		//对B在这一列上的每一个非零元的行号，找到A中列号与这些行号相同的列，然后这些列被非零元数乘
 		for (uint j = B->col_range->at(i); j < B->col_range->at(i + 1); j++) {
@@ -83,7 +90,7 @@ void cgemm(const sparce_matrix<tp>* _A, const sparce_matrix<tp>* _B, sparce_matr
 				halfCord<tp>* ab = new halfCord<tp>(A->row_index->at(k), A->data->at(k) * B->data->at(j), mid_results->size());
 				jcol->push(ab);
 			}
-			if (!jcol->empty())mid_results->push_back(jcol);
+			if (!jcol->empty()) mid_results.push_back(jcol);
 		}
 		
 		priority_queue<halfCord<tp>*, vector<halfCord<tp>*>, cmp2<tp>> compare_result;

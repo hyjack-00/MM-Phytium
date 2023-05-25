@@ -15,7 +15,7 @@ add_executable(sparce_test ${SPARCE_TEST})
 target_include_directories(sparce_test PUBLIC ./sparce)
 
 # compile options
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -falign-loops -march=native -ffast-math -fopenmp -Wall -Wextra -g ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O2 -falign-loops -march=native -ffast-math -fopenmp -Wall -Wextra -g")
 
 # add_compile_options(-static)
 # add_compile_options(-funroll-loops)

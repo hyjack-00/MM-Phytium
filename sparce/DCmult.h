@@ -9,15 +9,18 @@
 #include <map>
 #include <deque>
 
-typedef unsigned int uint;
-typedef const unsigned int cui;
+using std::queue;
+using std::priority_queue;
+using std::deque;
+
 
 template<typename tp>
 struct Cord {
 	uint row, col;
 	tp data;
 	uint sign;  // 为了在merge的时候，提示这个元素来自哪次结果
-	Cord(cui row_index, cui col_index, const tp d, cui s) : 
+
+	Cord(uint row_index, uint col_index, tp d, uint s) : 
 		row(row_index), col(col_index), data(d), sign(s) {}
 };
 
@@ -42,7 +45,7 @@ bool is_equal(const Cord<tp>* a, const Cord<tp>* b) {
 	return (a->col == b->col && a->row == b->row);
 }
 
-//这里假定ABC是列，行，行优先
+// 假定 ABC 是列，行，行优先
 //注意：目前的版本下，调用本函数之后，C作为一个指针会改变其所指的位置。这可能有所不妥？
 //当前版本下，一次乘法可能需要四次转换存储方式。可能有更好的方法。
 template<typename tp>
@@ -142,20 +145,6 @@ void dcgemm(const dc_sparce_matrix<tp>* _A, const dc_sparce_matrix<tp>* _B, dc_s
 		delete C1;
 	}
 	return;
-
-	/* 
-		如果采用返回值的写法，输入的 _C 矩阵内存不应该由 gemm 函数释放，而是应当由创建矩阵的用户方处理 
-		-- by Huangyj
-	*/
-	// dc_sparce_matrix<tp>* C1 = new dc_sparce_matrix<tp>(final_result.begin(), final_result.end(), 1);
-	// if (_C->trans) {
-	// 	return C1;
-	// }else{
-	// 	dc_sparce_matrix<tp>* C1_temp = new dc_sparce_matrix<tp>(*C1, 1);
-	// 	delete C1;
-	// 	return C1_temp;
-	// }
-	// return nullptr;
 }
 
 #endif // !DOUBLE_COMPRESSED_SPARSE_MULT

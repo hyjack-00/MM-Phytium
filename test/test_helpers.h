@@ -23,7 +23,7 @@ template <typename T>
 void print_mat(T *mat, int ni, int nj, string msg="") {
     std::ofstream fout("output/matrix.dat", std::ios::app);
     if (!fout.is_open()) {
-        cout << "Error opening file for result" << endl;
+        cout << "Error opening file for print_matrix()" << endl;
         exit(1);
     }
     fout << msg << endl;
@@ -42,7 +42,7 @@ template <typename T>
 void print_mat(T &mat, string msg="") {
     std::ofstream fout("output/matrix.dat", std::ios::app);
     if (!fout.is_open()) {
-        cout << "Error opening file for result" << endl;
+        cout << "Error opening file for print_matrix()" << endl;
         exit(1);
     }
     fout << msg << endl;

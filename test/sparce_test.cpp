@@ -28,7 +28,7 @@ int main() {
     const int data_loop = 1;     // 生成新矩阵数据的次数
     const int compute_loop = 1;  // 每个生成矩阵的计算次数
     // const int ni = 4, nj = 5, nk = 3;
-    const int ni = 400, nj = 300, nk = 500;
+    const int ni = 1024, nj = 1024, nk = 1024;
 
     OS << "Test start" << endl;
     OS << "Loop: " << data_loop << "x" << compute_loop << endl;

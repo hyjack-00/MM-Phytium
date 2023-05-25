@@ -7,11 +7,11 @@
 #include <random>
 #include <map>
 #include <unordered_map>
-using namespace std;
+
+using std::vector;
+using std::ostream;
 
 typedef unsigned int uint;
-typedef const unsigned int cui;
-
 
 
 template<typename tp>
@@ -23,7 +23,7 @@ vector<tp>* init_with_reserve(uint size) {
 
 //注意：rd()是一个无符号整数
 template<typename tp>
-void init_random(tp* a, cui row, cui col) {
+void init_random(tp* a, const uint row, const uint col) {
 	random_device rd;
 	uint size = row * col;
 	uint zerorow = rd() % row;
@@ -41,12 +41,12 @@ void init_random(tp* a, cui row, cui col) {
 	}
 }
 
+// 实现 vector 的输出
 template<typename tp>
-ostream& operator<<(ostream& output, vector<tp>* a)
-{
+ostream& operator<<(ostream& output, vector<tp>& a) {
 	output << "[";
 	for (size_t i = 0; i < a->size(); i++) {
-		output << (*a)[i] << ", ";
+		output << a[i] << ", ";
 	}
 	output << "]";
 	return output;
@@ -77,30 +77,30 @@ ostream& operator<<(ostream& output, vector<tp>* a)
 
 template<typename tp>
 struct sparce_matrix {
-	/* 使用 const 值会导致赋值构造默认被禁止 -- Huangyj */
 	uint row;                 // 只要大于row_index里的所有值就可以了
-	vector<tp>* data;
-	vector<uint>* row_index;  // 同一列里的行号
-	vector<uint>* col_range;  // 哪些是同一列的
-	bool trans;               // 如果是0，就是csc，否则是csr（相当于存储转置的csc）
+	vector<tp> data;
+	vector<uint> row_index;   // 同一列里的行号
+	vector<uint> col_range;   // 哪些是同一列的
+	bool is_csr;              // 默认0表示csc存储
+	                          // 需要转置时可csr=1：数据存储不变，对象视为另一个矩阵的csr存储
 
 	sparce_matrix() {
 		row = 0;
-		data = nullptr;
-		row_index = nullptr;
-		col_range = nullptr;
-		trans = 0;
+		data = vector<tp>();
+		row_index = vector<uint>();
+		col_range = vector<uint>();
+		is_csr = 0;
 	}
 
-	//一个空的矩阵
-	sparce_matrix(cui row_num, const bool& transport) : row(row_num), trans(transport) {
-		data = new vector<tp>;
-		row_index = new vector<uint>;
-		col_range = new vector<uint>(1,0);
+	/** Empty matrix */
+	sparce_matrix(uint row_num, bool csr) : row(row_num), is_csr(csr) {
+		data = vector<tp>();
+		row_index = vector<uint>();
+		col_range = vector<uint>(1,0);
 	}
 
-	// init from a dense matrix
-	sparce_matrix(const tp* A, cui r, cui c, bool tr) : row(tr?c:r), trans(tr) {
+	/** Init from a dense matrix */
+	sparce_matrix(const tp* mat, uint r, uint c, bool tranpose=0) : row(tranpose?c:r), is_csr(tranpose) {
 		if (trans) {
 			data = new vector<tp>;
 			row_index = new vector<uint>;
@@ -108,9 +108,9 @@ struct sparce_matrix {
 			for (uint j = 0; j < r; j++) {
 				col_range->push_back(row_index->size());
 				for (uint i = 0; i < c; i++) {
-					if (A[j * c + i]) {
+					if (mat[j * c + i]) {
 						row_index->push_back(i);
-						data->push_back(A[j * c + i]);
+						data->push_back(mat[j * c + i]);
 					}
 				}
 			}
@@ -141,8 +141,10 @@ struct sparce_matrix {
 		}
 	}
 
-	//注：trans==1意味着它会以另一种存储方式存储。但是两个矩阵逻辑上是相等的。
-	sparce_matrix(const sparce_matrix<tp>* a,const bool& transpose) : row(transpose ? a->col() : a->row) {
+	/**
+	 * \warning transpose==1意味着它会以另一种存储方式存储。但是两个矩阵逻辑上是相等的。
+	*/
+	sparce_matrix(const sparce_matrix<tp>* a, const bool transpose = 0) : row(transpose ? a->col() : a->row) {
 		if (transpose) {
 			data = new vector<tp>(a->nnz(), 0);
 			trans = !a->trans;
@@ -191,32 +193,26 @@ struct sparce_matrix {
 		col_range->push_back(data->size());
 	}
 
-	uint nnz() const {
-		return data->size();
-	}
-
-	void transpose() const {
-		!trans;
+	void quick_transpose() {
+		CSR = ;
 		return;
 	}
 
-	void clean() {
-		delete data;
-		delete row_index;
-		delete col_range;
-		data = nullptr;
-		row_index = nullptr;
-		col_range = nullptr;
+	void clear() {
+		col_range.clear();
+		row_index.clear();
+		data.clear();
+		row = 0;
 	}
 
-	~sparce_matrix() {
-		delete data;
-		delete row_index;
-		delete col_range;
-	}
+	~sparce_matrix() = default;
 
-	uint col() const {
+	uint get_col() const {
 		return col_range->size() - 1;
+	}
+
+	uint get_nnz() const {  // number of non-zero elements
+		return data->size();
 	}
 
 	friend ostream& operator<<(ostream& output, const sparce_matrix& a)

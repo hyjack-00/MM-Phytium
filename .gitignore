@@ -7,8 +7,10 @@ output
 *.o
 *.dat
 *.txt
-*.data
+
+perf.*
 
 Makefile_
 build.sh
+compile.sh
 run.sh

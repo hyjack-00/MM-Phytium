@@ -6,7 +6,7 @@ Matrix-Multiplication-Library-on-Phytium
 
 ## 编译运行脚本
 
-如果按照 huangyj 的 cmake 项目结构，编译的命令如下，具体的编译选项见 `CMakeLists.txt`
+如果按照 huangyj 的 cmake 项目结构，需要自行增加 bin, build 和 output 文件夹，编译的命令如下，具体的编译选项见 `CMakeLists.txt`
 
 ```shell
 cd build
@@ -116,6 +116,8 @@ Overhead  Command      Shared Object Symbol
 0.28%  sparce_test  libc-2.23.so          [.] 0x0000000000070b00
 ....
 ```
+
+其实就是说热点在于 入队 的操作
 
 # 想法
 
