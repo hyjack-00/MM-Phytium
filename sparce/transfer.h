@@ -8,8 +8,13 @@
 #include <map>
 #include <unordered_map>
 
+#include <string.h>  // memset
+
 using std::vector;
 using std::ostream;
+using std::map;
+using std::unordered_map;
+using std::pair;
 
 typedef unsigned int uint;
 
@@ -24,7 +29,7 @@ vector<tp>* init_with_reserve(uint size) {
 //注意：rd()是一个无符号整数
 template<typename tp>
 void init_random(tp* a, const uint row, const uint col) {
-	random_device rd;
+	std::random_device rd;
 	uint size = row * col;
 	uint zerorow = rd() % row;
 	uint zerocol = rd() % col;
@@ -43,7 +48,7 @@ void init_random(tp* a, const uint row, const uint col) {
 
 // 实现 vector 的输出
 template<typename tp>
-ostream& operator<<(ostream& output, vector<tp>& a) {
+ostream& operator<<(ostream& output, const vector<tp>& a) {
 	output << "[";
 	for (size_t i = 0; i < a->size(); i++) {
 		output << a[i] << ", ";
@@ -75,126 +80,249 @@ ostream& operator<<(ostream& output, vector<tp>& a) {
 	-- Huangyj 
 */
 
+// 默认 CSC，被压缩的 outer 是 col
+#define outer_size col_size
+#define inner_size row_size
+#define outer_range col_range
+#define inner_index row_index
+
+
 template<typename tp>
 struct sparce_matrix {
-	uint row;                 // 只要大于row_index里的所有值就可以了
-	vector<tp> data;
-	vector<uint> row_index;   // 同一列里的行号
-	vector<uint> col_range;   // 哪些是同一列的
-	bool is_csr;              // 默认0表示csc存储
-	                          // 需要转置时可csr=1：数据存储不变，对象视为另一个矩阵的csr存储
+	uint row_size;            // 实际行数，只要大于 row_index 里的所有值就可以了
+	uint col_size;            // === col_range.size() - 1
+	vector<tp> data;          // data[i]      表示第 i 个元素的值
+	vector<uint> row_index;   // row_index[i] 表示第 i 个元素的行号
+	vector<uint> col_range;   // col_range[j] 表示 j 列的第一个元素的索引
 
-	sparce_matrix() {
-		row = 0;
-		data = vector<tp>();
-		row_index = vector<uint>();
-		col_range = vector<uint>();
-		is_csr = 0;
-	}
+	bool csr;                 // 默认 0 表示 csc 存储
+	                          // 转置时可 csr=1：数据存储不变，对象变成另一个矩阵的 csr 表示，此时 col-row 含义相反
+
+	sparce_matrix() : 
+		row_size(0), col_size(0), csr(0) {}  // vector 自动初始化
 
 	/** Empty matrix */
-	sparce_matrix(uint row_num, bool csr) : row(row_num), is_csr(csr) {
-		data = vector<tp>();
-		row_index = vector<uint>();
+	sparce_matrix(uint rows, uint cols, bool is_csr=0) : csr(is_csr) {
+		if (is_csr) {
+			row_size = cols;
+			col_size = rows;
+		}
+		else {
+			row_size = rows;
+			col_size = cols;
+		}
 		col_range = vector<uint>(1,0);
 	}
 
-	/** Init from a dense matrix */
-	sparce_matrix(const tp* mat, uint r, uint c, bool tranpose=0) : row(tranpose?c:r), is_csr(tranpose) {
-		if (trans) {
-			data = new vector<tp>;
-			row_index = new vector<uint>;
-			col_range = new vector<uint>;
-			for (uint j = 0; j < r; j++) {
-				col_range->push_back(row_index->size());
-				for (uint i = 0; i < c; i++) {
-					if (mat[j * c + i]) {
-						row_index->push_back(i);
-						data->push_back(mat[j * c + i]);
-					}
-				}
-			}
-			col_range->push_back(row_index->size());
-			data->shrink_to_fit();
-			row_index->shrink_to_fit();
-			col_range->shrink_to_fit();
-			return;
-		}
-		else {
-			data = new vector<tp>;
-			row_index = new vector<uint>;
-			col_range = new vector<uint>;
-			for (uint i = 0; i < c; i++) {
-				col_range->push_back(row_index->size());
-				for (uint j = 0; j < r; j++) {
-					if (A[j * c + i]) {
-						row_index->push_back(j);
-						data->push_back(A[j * c + i]);
-					}
-				}
-			}
-			col_range->push_back(row_index->size());
-			data->shrink_to_fit();
-			row_index->shrink_to_fit();
-			col_range->shrink_to_fit();
-			return;
-		}
-	}
-
-	/**
-	 * \warning transpose==1意味着它会以另一种存储方式存储。但是两个矩阵逻辑上是相等的。
+	/** Init from a dense matrix (Row-Major)
+	 * @param transpose 为 1 时表示稠密矩阵输入前，增加转置操作
 	*/
-	sparce_matrix(const sparce_matrix<tp>* a, const bool transpose = 0) : row(transpose ? a->col() : a->row) {
-		if (transpose) {
-			data = new vector<tp>(a->nnz(), 0);
-			trans = !a->trans;
-			row_index = new vector<uint>(a->nnz(), 0);
+	sparce_matrix(const tp* M, uint M_rows, uint M_cols, bool is_csr=0, bool transpose=0) {
+		data = vector<tp>();
+		inner_index = vector<uint>();
+		outer_range = vector<uint>();
+		csr = is_csr;
 
-			//创建一些临时数组:col_num代表A转置的这一列上有多少元素
-			vector<uint>* col_num = new vector<uint>(a->row, 0);
-			for (uint ri = 0; ri < a->nnz(); ri++) {
-				col_num->at(a->row_index->at(ri)) += 1;
+		bool M_col_compress = !(is_csr ^ transpose);
+		/*
+		    csr  trans  |  M_col_compress （是否选择 M_col 维度压缩输入为 outer）
+			 0     0    |    1
+			 0     1    |    0
+			 1     1    |    1
+			 1     0    |    0
+		*/
+
+		// outer=M_col -> inner=M_row
+		inner_size = M_col_compress ? M_rows : M_cols;
+		outer_size = M_col_compress ? M_cols : M_rows;
+
+		if (M_col_compress) {
+			for (uint c = 0; c < M_cols; c++) {
+				outer_range.push_back(inner_index.size());
+				for (uint r = 0; r < M_rows; r++) {
+					if (M[r * M_cols + c]) {
+						inner_index.push_back(c);
+						data.push_back(M[r * M_cols + c]);
+					}
+				}
 			}
-			uint* col_now = new uint[a->row + 1];//这个是为了等会记录每个data插入的位置。
-			uint tmp = 0;
-			for (uint it = 0; it != a->row; it++) {
-				col_now[it] = tmp;
-				tmp += col_num->at(it);
+			outer_range.push_back(inner_index.size());
+			
+			data.shrink_to_fit();
+			inner_index.shrink_to_fit();
+			outer_range.shrink_to_fit();
+			return;
+		}
+		else {
+			for (uint r = 0; r < M_rows; r++) {
+				outer_range.push_back(inner_index.size());
+				for (uint c = 0; c < M_cols; c++) {
+					if (M[r * M_cols + c]) {
+						inner_index.push_back(r);
+						data.push_back(M[r * M_cols + c]);
+					}
+				}
 			}
-			col_now[a->row] = tmp;
-			col_range = new vector<uint>(col_now, col_now + a->row + 1);
+			outer_range.push_back(inner_index.size());
 
+			data.shrink_to_fit();
+			inner_index.shrink_to_fit();
+			outer_range.shrink_to_fit();
+			return;
+		}
+	}
 
-			//插入data
-			for (uint col = 0; col < a->col(); col++) {
-				for (uint row = a->col_range->at(col); row < a->col_range->at(col + 1); row++) {
-					data->at(col_now[a->row_index->at(row)]) = a->data->at(row);
-					row_index->at(col_now[a->row_index->at(row)]) = col;
-					col_now[a->row_index->at(row)]++;
+	/** @param transpose 为 1 时将会改变存储数据，但不会改变数学表示 */
+	sparce_matrix(const sparce_matrix<tp>& a, bool convert_fmt=0) {
+		if (convert_fmt) {
+			/* 以下编程假设 a 是 csc
+				a.outer = "a.col", 
+				a.inner = "a.row",
+				b.outer = a.inner = "a.row", 
+				b.inner = a.outer = "a.col"
+			*/ 
+			uint nnz = a.non_zeros();
+
+			csr = !a.csr;
+			row_size = a.col_size;
+			col_size = a.row_size;
+			row_index = vector<uint>(nnz, 0);
+			data      = vector<tp>(nnz, 0);
+
+			// outer/col_count[i] 统计 A 的第 i 行(inner) 元素数量
+			vector<uint> col_count = vector<uint>(a.row_size, 0);
+			for (uint ri = 0; ri < nnz; ri++) {
+				uint r = a.row_index[ri];
+				col_count[r] += 1;
+			}
+
+			vector<uint> col_now = vector<uint>(a.row_size + 1);  // 累加得到 outer/col_range
+			uint acc = 0;
+			for (uint it = 0; it < a.row_size; it++) {
+				col_now[it] = acc;
+				acc += col_count[it];
+			}
+			col_now[a.row_size] = acc;
+			col_range = vector<uint>(col_now);
+
+			// 插入data
+			// (a)i 表示元素索引，(a)r 表示行号，(a)c 表示列号
+			for (uint ac = 0; ac < a.col_size; ac++) {
+				for (uint ar = a.col_range[ac]; ar < a.col_range[ac+1]; ar++) {
+					uint ai = a.row_index[ar];
+					uint i = col_now[ai];
+
+					data[i] = a.data[ai];
+					row_index[i] = ac;
+					col_now[ai]++;
 				}
 			}
 		}
 		else {
-			data = new vector<tp>(a->data->begin(), a->data->end());
-			row_index = new vector<uint>(a->row_index->begin(), a->row_index->end());
-			col_range = new vector<uint>(a->col_range->begin(), a->col_range->end());
-			trans = a->trans;
+			row_size = a.row_size;
+			col_size = a.col_size;
+			data 	  = vector<tp>(a.data.begin(), a.data.end());
+			row_index = vector<uint>(a.row_index.begin(), a.row_index.end());
+			col_range = vector<uint>(a.col_range.begin(), a.col_range.end());
+			csr = a.csr;
 		}
 	}
 
-	//注意：默认行号递增，且直接填充进下一列。但不要求非空。
-	template<class InputIterator>
-	void append_col(InputIterator begin, InputIterator end) {
-		while (begin != end) {
-			row_index->push_back((*begin)->row);
-			data->push_back((*begin)->data);
-			begin++;
+	/** 仅作测试用
+	 * @return Dense matrix (Row-Major) form of the matrix, memory independent
+	 * @warning Raw pointer, should be deleted by user!!
+	 * */
+	tp * to_dense_mat() const {
+		tp *mat = new tp[row_size * col_size];
+		memset(mat, 0, sizeof(tp) * row_size * col_size);
+		
+		if (csr) {  // outer = row
+			uint it = 0;
+			for (uint r = 0; r < outer_size; r++) {
+				for ( ; it < outer_range[r+1]; it++) {
+					uint c = inner_index[it];
+					mat[r * inner_size + c] = data[it];
+				}
+			}
 		}
-		col_range->push_back(data->size());
+		else {  // outer = col
+			uint it = 0;
+			for (uint c = 0; c < outer_size; c++) {
+				for ( ; it < outer_range[c+1]; it++) {
+					uint r = inner_index[it];
+					mat[r * inner_size + c] = data[it];
+				}
+			}
+		}
+	}
+
+	// /** csc 时补充一列？ */
+	// template<class InputIterator>
+	// void append_outer(InputIterator begin, InputIterator end) {
+	// 	while (begin != end) {
+	// 		inner_index.push_back((*begin).row_size);
+	// 		data.push_back((*begin).data);
+	// 		begin++;
+	// 	}
+	// 	outer_range.push_back(data.size());
+	// }
+
+	/** @warning 将会改变数据组织方式，但不会改变数学表示 */
+	void convert_format() {
+		transpose();
+		quick_transpose();
+	}
+
+	/** @warning 将会改变数据组织方式，但不改变 csr，这会变成另一个数学矩阵的表示 */
+	void transpose() {
+		/* 以下编程假设 a 是 csc
+			a.outer = "a.col", 
+			a.inner = "a.row",
+			b.outer = a.inner = "a.row", 
+			b.inner = a.outer = "a.col"
+		*/ 
+		uint nnz = non_zeros();
+
+		std::swap(col_size, row_size);
+		vector<uint> _row_index = std::move(row_index);
+		vector<uint> _col_range = std::move(col_range);
+		vector<uint> _data      = std::move(data);
+
+		row_index = vector<uint>(nnz, 0);
+		data      = vector<tp>(nnz, 0);
+
+		// outer/col_count[i] 统计 A 的第 i 行(inner) 元素数量
+		vector<uint> col_count = vector<uint>(col_size, 0);
+		for (uint ri = 0; ri < nnz; ri++) {
+			uint r = _row_index[ri];
+			col_count[r] += 1;
+		}
+
+		vector<uint> col_now = vector<uint>(col_size + 1);  // 累加得到 outer/col_range
+		uint acc = 0;
+		for (uint it = 0; it < col_size; it++) {
+			col_now[it] = acc;
+			acc += col_count[it];
+		}
+		col_now[col_size] = acc;
+		col_range = vector<uint>(col_now);
+
+		// 插入data
+		// (a)i 表示元素索引，(a)r 表示行号，(a)c 表示列号
+		for (uint ac = 0; ac < row_size; ac++) {
+			for (uint ar = _col_range[ac]; ar < _col_range[ac+1]; ar++) {
+				uint ai = _row_index[ar];
+				uint i = col_now[ai];
+
+				data[i] = _data[ai];
+				row_index[i] = ac;
+				col_now[ai]++;
+			}
+		}
 	}
 
 	void quick_transpose() {
-		CSR = ;
+		csr = !csr;
 		return;
 	}
 
@@ -202,22 +330,29 @@ struct sparce_matrix {
 		col_range.clear();
 		row_index.clear();
 		data.clear();
-		row = 0;
+		col_size = 0;
+		row_size = 0;
 	}
 
 	~sparce_matrix() = default;
 
-	uint get_col() const {
-		return col_range->size() - 1;
+	uint cols() const {
+		if (csr) return inner_size;
+		else     return outer_size;  // col_range->size() - 1;
+	}
+	uint rows() const {
+		if (csr) return outer_size;  // col_range->size() - 1;
+		else     return inner_size;
 	}
 
-	uint get_nnz() const {  // number of non-zero elements
-		return data->size();
+	/** number of non-zero elements */
+	uint non_zeros() const {
+		return data.size();
 	}
 
 	friend ostream& operator<<(ostream& output, const sparce_matrix& a)
 	{
-		output << "transposed? " << a.trans << endl << "data:" << a.data << endl << "row_index : " << a.row_index << endl << "col_range : " << a.col_range << endl;
+		output << "csr? " << a.csr << endl << "data:" << a.data << endl << "row_index : " << a.row_index << endl << "col_range : " << a.col_range << endl;
 		return output;
 	}
 
@@ -241,15 +376,15 @@ struct dc_sparce_matrix {
 
 	// init from a normal dense matrix
 	dc_sparce_matrix(const sparce_matrix<tp>& a) {
-		data = new vector<tp>(a.data->begin(), a.data->end());
-		row_index = new vector<uint>(a.row_index->begin(), a.row_index->end());
+		data = new vector<tp>(a.data.begin(), a.data.end());
+		row_index = new vector<uint>(a.row_index.begin(), a.row_index.end());
 		col_range = new vector<uint>;
 		col_index = new vector<uint>;
-		trans = a.trans;
+		trans = a.csr;
 		col_range->push_back(0);
-		for (uint i = 0; i < a.col_range->size() - 1; i++) {
-			if ((*(a.col_range))[i] != (*(a.col_range))[i + 1]) {
-				col_range->push_back((*(a.col_range))[i + 1]);
+		for (uint i = 0; i < a.col_range.size() - 1; i++) {
+			if (a.col_range[i] != a.col_range[i + 1]) {
+				col_range->push_back(a.col_range[i + 1]);
 				col_index->push_back(i);
 			}
 		}

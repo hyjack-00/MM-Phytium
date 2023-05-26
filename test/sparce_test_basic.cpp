@@ -9,7 +9,7 @@ using namespace std;
 #define L 3
 //M| N- * N| L- 
 
-int main() {
+void gemm_test() {
 	/*
 	1, 0, 0, 0, 0;
 	0, 0, 0, 0, 0;
@@ -47,9 +47,9 @@ int main() {
 	dcgemm(&da1, &da2, da3);
 	cout << "da3: " << endl << * da3 << endl;
 
-	cgemm(&sa1, &sa2, sa3);
-	sparce_matrix<int> sta3(sa3, 1);
-	cout << "sta3: " << endl << sta3 << endl;
+	// cgemm(&sa1, &sa2, sa3);
+	// sparce_matrix<int> sta3(*sa3, 1);
+	// cout << "sta3: " << endl << sta3 << endl;
 
 	/*
 	expected:
@@ -58,4 +58,8 @@ int main() {
 	4, 0, 0;
 	4, 72, 8;
 	*/
+}
+
+int main() {
+
 }
