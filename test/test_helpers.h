@@ -79,9 +79,21 @@ void ans_check_s32(int *mat, int *ans, int ni, int nj) {
         }
     if (flag) cout << "Ans Correct" << endl;
 }
+void ans_check_f32(float *mat, float *ans, int ni, int nj) {
+    int flag = 1;
+    for (int i = 0; i < ni*nj; i ++)
+        if (abs(mat[i] - ans[i]) > 1e10) {
+            cout << "Ans Wrong at [" << i/nj << "," << i%nj << "]  mat:" << mat[i] << " ans:" << ans[i] << endl;
+            flag = 0;
+        }
+    if (flag) cout << "Ans Correct" << endl;
+}
 
 void zeros_s32(int *mat, int length_1d) {
     for (int i = 0; i < length_1d; i ++) mat[i] = 0;
+}
+void zeros_f32(float *mat, int length_1d) {
+    for (int i = 0; i < length_1d; i ++) mat[i] = 0.;
 }
 
 void rand_mat_s32(int *mat, int length_1d, unsigned int seed) {

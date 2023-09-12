@@ -11,4 +11,5 @@ output
 
 Makefile_
 build.sh
+compile.sh
 run.sh

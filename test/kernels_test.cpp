@@ -16,7 +16,9 @@
 #define ANS_CHECK false  // 是否进行答案检查
 #define OPTI_BLOCKING_MODE false  // 是否为分块大小测试模式
 
-/* 使用 OS 代替 cout ，以在 FILE_OUTPUT == true 时输出到文件 */
+/* 使用 OS 代替 cout ，以在 FILE_OUTPUT == true 时输出到文件 
+    突然发现这个根本没有必要，直接输出重定向就好了！！
+*/
 string ouput_file = "output/output.dat";
 #if FILE_OUTPUT == true
     #define OS ofs
@@ -42,7 +44,7 @@ static size_t Tj = 256;
 static size_t Tk = 256;
 #define MIN(x,y) (((x)<(y))?(x):(y))
 
-void outer_kernel_packAB(
+void kernel_s32_packAB(
     int32_t *A, int32_t *B, int32_t *C,
     size_t ni, size_t nj, size_t nk,
     mks32_pAB_t mk, packs32_A_t pkA, packs32_B_t pkB) 
@@ -66,7 +68,7 @@ void outer_kernel_packAB(
         }
     }
 }
-void outer_kernel_packABC(
+void kernel_s32_packABC(
     int32_t *A, int32_t *B, int32_t *C,
     size_t ni, size_t nj, size_t nk,
     mks32_pABC_t mk, packs32_A_t pkA, packs32_B_t pkB, 
@@ -93,7 +95,7 @@ void outer_kernel_packABC(
         }
     }
 }
-void outer_kernel(
+void kernel_s32(
     int32_t *A, int32_t *B, int32_t *C,
     size_t ni, size_t nj, size_t nk, mks32_t mk) 
 {
@@ -111,15 +113,13 @@ void outer_kernel(
 }
 
 
+#define TEST_N_S32 1024
 
-#define TEST_N 1024
-
-int main() {
+void test_s32() {
     const int data_loop = 10;
     const int compute_loop = 5;
     // const int ni = 4, nj = 8, nk = 8;
-    const int ni = TEST_N, nj = TEST_N, nk = TEST_N;
-
+    const int ni = TEST_N_S32, nj = TEST_N_S32, nk = TEST_N_S32;
 
     #if OPTI_BLOCKING_MODE == false
     // 性能测试模式 ==============================
@@ -146,12 +146,12 @@ int main() {
             zeros_s32(C, ni * nj);
             auto start = Clock::now();
 
-            // outer_kernel(A, B, C, ni, nj, nk, mks32_4x8k8_ldB_fchC);
-            outer_kernel_packAB(A, B, C, ni, nj, nk, 
-                mks32_4x8k8_ldB_fchC_pkAB,
-                packs32_4x8k8_A,
-                packs32_4x8k8_B);
-            // outer_kernel_packABC(A, B, C, ni, nj, nk, 
+            // kernel_s32(A, B, C, ni, nj, nk, mks32_4x8k8_ldB_fchC);
+            // kernel_s32_packAB(A, B, C, ni, nj, nk, 
+            //     mks32_4x8k8_ldB_fchC_pkAB,
+            //     packs32_4x8k8_A,
+            //     packs32_4x8k8_B);
+            // kernel_packABC_s32(A, B, C, ni, nj, nk, 
             //     mks32_4x8k8_ldB_fchC_pkABC, 
             //     packs32_4x8k8_A,
             //     packs32_4x8k8_B,
@@ -171,7 +171,7 @@ int main() {
         #if ANS_CHECK == true  
             int32_t *D = (int32_t *) malloc(sizeof(int32_t) * ni * nj);
             zeros_s32(D, ni * nj);
-            outer_kernel(A, B, D, ni, nj, nk, mks32_0);
+            kernel_s32(A, B, D, ni, nj, nk, mks32_0);
             ans_check_s32(C, D, ni, nj);
 
             print_mat(A, ni, nk, "A");
@@ -230,12 +230,12 @@ int main() {
             for (int compute = 0; compute < compute_loop; compute ++) {
                 auto start = Clock::now();
 
-                // outer_kernel(A, B, C, ni, nj, nk, mks32_8x4k8_ldA_fchC);
-                outer_kernel_packAB(A, B, C, ni, nj, nk, 
+                // kernel_s32(A, B, C, ni, nj, nk, mks32_8x4k8_ldA_fchC);
+                kernel_s32_packAB(A, B, C, ni, nj, nk, 
                     mks32_4x8k8_ldB_fchC_pkAB, 
                     packs32_4x8k8_A,
                     packs32_4x8k8_B);
-                // outer_kernel_packABC(A, B, C, ni, nj, nk, 
+                // kernel_s32_packABC(A, B, C, ni, nj, nk, 
                 //     mks32_4x8k8_ldB_fchC_pkABC, 
                 //     packs32_4x8k8_A,
                 //     packs32_4x8k8_B,
@@ -285,4 +285,64 @@ int main() {
     #if FILE_OUTPUT == true
         ofs.close();
     #endif
+}
+
+
+#define TEST_N_F32 1024
+
+void test_f32() {
+    const int data_loop = 5;
+    const int compute_loop = 5;
+    const int ni = 4, nj = 8, nk = 8;
+    // const int ni = TEST_N_F32, nj = TEST_N_F32, nk = TEST_N_F32;
+
+    cout << "Loop: " << data_loop << "x" << compute_loop << endl;
+    cout << "Size: i" << ni << " j" << nj << " k" << nk << endl;
+
+    double total_time = 0;
+    for (int data_i = 0; data_i < data_loop; data_i ++) {
+        float32_t *A = (float32_t *) malloc(sizeof(float32_t) * ni * nk);
+        float32_t *B = (float32_t *) malloc(sizeof(float32_t) * nk * nj);
+        float32_t *C = (float32_t *) malloc(sizeof(float32_t) * ni * nj);
+        rand_mat_f32(A, ni * nk, 1234);
+        rand_mat_f32(B, nk * nj, 5678);
+
+        double time = 0;
+        for (int compute_i = 0; compute_i < compute_loop; compute_i ++) {
+            zeros_f32(C, ni * nj);
+            auto start = Clock::now();
+
+            /* Timing Zone -- */
+
+            SMM_kernel_f32_single(C, A, B, ni, nj, nk, nj);
+
+            /* -- Timing Zone */
+
+            auto end = Clock::now();
+            double dur = Dur(start, end);
+            dur /= 1000.0;
+            time += dur; 
+            cout << "compute time: " << dur << " msecs" << endl;
+        }
+        cout << "  avg time: " << time/compute_loop << " msecs for data: " << data_i << endl;
+        total_time += time/compute_loop;
+
+        // Answer Check 
+            float32_t *D = (float32_t *) malloc(sizeof(float32_t) * ni * nj);
+            zeros_f32(D, ni * nj);
+            naive(A, B, D, ni, nj, nk);
+            ans_check_f32(C, D, ni, nj); 
+            free(D);
+
+        free(A);
+        free(B);
+        free(C);
+    }
+    cout << "    total avg time: " << total_time/data_loop << " msecs" << endl;
+}
+
+
+int main() {
+    // test_s32();
+    test_f32();
 }

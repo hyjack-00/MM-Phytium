@@ -146,3 +146,18 @@ void packs32_8x4k8_A(
 void packs32_8x4k8_B(
     int32_t *B, int32_t *Bpack,
     size_t kt, size_t jt, size_t LDB);
+
+
+
+
+// SMM (libShalom)
+extern "C" { 
+void SMM_packf32_A(float* A, float* Ac, long M, long K, long LK);
+
+void SMM_mkf32(float *C, float *A, float *B, 
+                long M, long N, long K, long LN, long LK, 
+                float *SB, long k_tag);
+
+void SMM_kernel_f32_single(float *C, float *A, float *B, 
+                            long M, long N, long K, long LN);
+}
