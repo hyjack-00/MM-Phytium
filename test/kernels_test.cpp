@@ -12,20 +12,8 @@
 #include "test_helpers.h"
 #include "microkernels.h"
 
-#define FILE_OUTPUT false  // 是否输出从 stdout 到 文件
 #define ANS_CHECK false  // 是否进行答案检查
 #define OPTI_BLOCKING_MODE false  // 是否为分块大小测试模式
-
-/* 使用 OS 代替 cout ，以在 FILE_OUTPUT == true 时输出到文件 
-    突然发现这个根本没有必要，直接输出重定向就好了！！
-*/
-string ouput_file = "output/output.dat";
-#if FILE_OUTPUT == true
-    #define OS ofs
-    std::ofstream ofs(ouput_file, std::ios::app);
-#else
-    #define OS cout
-#endif
 
 #if OPTI_BLOCKING_MODE == true
 struct block_t {
@@ -123,7 +111,7 @@ void test_s32() {
 
     #if OPTI_BLOCKING_MODE == false
     // 性能测试模式 ==============================
-    OS << "Standard Test start" << endl;
+    cout << "Standard Test start" << endl;
     OS << "Loop: " << data_loop << "x" << compute_loop
        << ", Size: i" << ni << " j" << nj << " k" << nk << endl;
     #if FILE_OUTPUT == true
@@ -162,9 +150,9 @@ void test_s32() {
             double dur = Dur(start, end);
             dur /= 1000.0;
             total_time1 += dur; 
-            OS << "compute time: " << dur << " msecs" << endl;
+            cout << "compute time: " << dur << " msecs" << endl;
         }
-        OS << "  avg time1: " << total_time1/compute_loop << " msecs for data: " << data << endl;
+        cout << "  avg time1: " << total_time1/compute_loop << " msecs for data: " << data << endl;
         total_time2 += total_time1/compute_loop;
 
         // 答案检查 ==============================
@@ -185,7 +173,7 @@ void test_s32() {
         free(B);
         free(C);
     }
-    OS << "    total avg time2: " << total_time2/data_loop << " msecs" << endl;
+    cout << "    total avg time2: " << total_time2/data_loop << " msecs" << endl;
 
 
 
@@ -198,9 +186,9 @@ void test_s32() {
     const int topN = 40;
     srand(time(0));
 
-    OS << "Block Size Optimizing Test start" << endl;
-    OS << "Loop: " << data_loop << "x" << rand_loop << "x" << compute_loop << endl;
-    OS << "Size: i" << ni << " j" << nj << " k" << nk << endl;
+    cout << "Block Size Optimizing Test start" << endl;
+    cout << "Loop: " << data_loop << "x" << rand_loop << "x" << compute_loop << endl;
+    cout << "Size: i" << ni << " j" << nj << " k" << nk << endl;
     #if FILE_OUTPUT == true
     cout << "File output: " << ouput_file << endl; 
     #endif
@@ -247,7 +235,7 @@ void test_s32() {
                 total_time += dur / 1000.;
             }
             double t = total_time / compute_loop;
-            OS << Ti << " " << Tj << " " << Tk << " " << t << " msecs" << endl;
+            cout << Ti << " " << Tj << " " << Tk << " " << t << " msecs" << endl;
 
             record[idx_record+0] = (float) Ti;
             record[idx_record+1] = (float) Tj;
@@ -265,11 +253,11 @@ void test_s32() {
         free(C);
     }
     print_mat(record, data_loop * rand_loop, 4, "blocking record");
-    OS << endl << "============================ result ============================" << endl;
+    cout << endl << "============================ result ============================" << endl;
     while (!pq_block.empty()) {
         auto block = pq_block.top();
         pq_block.pop();
-        OS << block.Ti << " " << block.Tj << " " << block.Tk << " " << block.time << " msecs" << endl;
+        cout << block.Ti << " " << block.Tj << " " << block.Tk << " " << block.time << " msecs" << endl;
     }
     free(record);
     #endif 
@@ -280,7 +268,7 @@ void test_s32() {
     char cur_time[50];
     time_t now = time(NULL);
     strftime(cur_time, 50, "%x %X", localtime(&now));
-    OS << "Test Finished at " << cur_time << endl;
+    cout << "Test Finished at " << cur_time << endl;
 
     #if FILE_OUTPUT == true
         ofs.close();
