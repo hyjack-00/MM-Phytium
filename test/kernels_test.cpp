@@ -112,7 +112,7 @@ void test_s32() {
     #if OPTI_BLOCKING_MODE == false
     // 性能测试模式 ==============================
     cout << "Standard Test start" << endl;
-    OS << "Loop: " << data_loop << "x" << compute_loop
+    cout << "Loop: " << data_loop << "x" << compute_loop
        << ", Size: i" << ni << " j" << nj << " k" << nk << endl;
     #if FILE_OUTPUT == true
     cout << "File output: " << ouput_file << endl; 
@@ -294,17 +294,21 @@ void test_f32() {
         float32_t *C = (float32_t *) malloc(sizeof(float32_t) * ni * nj);
         rand_mat_f32(A, ni * nk, 1234);
         rand_mat_f32(B, nk * nj, 5678);
+        // rand_mat_f32(A, ni * nk, time(0));
+        // rand_mat_f32(B, nk * nj, time(0)+1);
 
         double time = 0;
         for (int compute_i = 0; compute_i < compute_loop; compute_i ++) {
             zeros_f32(C, ni * nj);
             auto start = Clock::now();
 
-            /* Timing Zone -- */
+            /* Timing Zone in -- */
 
-            SMM_kernel_f32_single(C, A, B, ni, nj, nk, nj);
+            kernelSMM_f32_pkAB_single(C, A, B, 
+                                    ni, nj, nk, 
+                                    nj);
 
-            /* -- Timing Zone */
+            /* -- Timing Zone out */
 
             auto end = Clock::now();
             double dur = Dur(start, end);

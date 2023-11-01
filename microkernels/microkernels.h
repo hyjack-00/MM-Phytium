@@ -150,14 +150,17 @@ void packs32_8x4k8_B(
 
 
 
-// SMM (libShalom)
-extern "C" { 
-void SMM_packf32_A(float* A, float* Ac, long M, long K, long LK);
+//# reproduce SMM ----------------------------------------------------------
 
-void SMM_mkf32(float *C, float *A, float *B, 
-                long M, long N, long K, long LN, long LK, 
-                float *SB, long k_tag);
+void packSMM_f32_A_k4(float32_t* A, float32_t* pkA, 
+                    size_t M, size_t K, size_t LK);
 
-void SMM_kernel_f32_single(float *C, float *A, float *B, 
-                            long M, long N, long K, long LN);
-}
+void mkSMM_f32_m8n12_pAkB(float32_t *C, float32_t *A, float32_t *B, 
+                        size_t M, size_t N, size_t K, 
+                        size_t LN, size_t LK, 
+                        float32_t *pkB, 
+                        size_t k_tag);
+
+void kernelSMM_f32_pkAB_single(float32_t *C, float32_t *A, float32_t *B, 
+                            size_t M, size_t N, size_t K, 
+                            size_t LN);

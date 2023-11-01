@@ -24,8 +24,8 @@ void PACKA(float* A, float* Ac, long M, long K, long LK)
                 "   ldr     x30, %[LK]              \n"
 
                 // x2-x9: temp[0-7][]
-                "   add     x3, x2, x30, lsl #2     \n"  // x3 = temp + (LK * 4)                row[1]  
-                "   add     x4, x2, x30, lsl #3     \n"  // x4 = temp + (LK * 8)                row[2]
+                "   add     x3, x2, x30, lsl #2     \n"  // x3 = temp + (LK * fp32)                row[1]  
+                "   add     x4, x2, x30, lsl #3     \n"  // x4 = temp + (LK * 2 fp32)                row[2]
                 "   add     x5, x3, x30, lsl #3     \n"  // x5 = temp + (LK * 4) + (LK * 8)     row[3]
                 "   add     x6, x4, x30, lsl #3     \n"  // x6 = temp + (LK * 8) + (LK * 8)
                 "   add     x7, x5, x30, lsl #3     \n"  
