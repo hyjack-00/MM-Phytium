@@ -24,8 +24,8 @@ void PACKA(float* A, float* Ac, long M, long K, long LK)
                 "   ldr     x30, %[LK]              \n"
 
                 // x2-x9: temp[0-7][]
-                "   add     x3, x2, x30, lsl #2     \n"  // x3 = temp + (LK * fp32)                row[1]  
-                "   add     x4, x2, x30, lsl #3     \n"  // x4 = temp + (LK * 2 fp32)                row[2]
+                "   add     x3, x2, x30, lsl #2     \n"  // x3 = temp + (LK * fp32)             row[1]  
+                "   add     x4, x2, x30, lsl #3     \n"  // x4 = temp + (LK * 2 fp32)           row[2]
                 "   add     x5, x3, x30, lsl #3     \n"  // x5 = temp + (LK * 4) + (LK * 8)     row[3]
                 "   add     x6, x4, x30, lsl #3     \n"  // x6 = temp + (LK * 8) + (LK * 8)
                 "   add     x7, x5, x30, lsl #3     \n"  
@@ -50,7 +50,7 @@ void PACKA(float* A, float* Ac, long M, long K, long LK)
                 "   prfm    PLDL1KEEP, [x5, #128]   \n"
 
                 // Ac[0][0-3] = { [0+i][0], [1+i][0], [2+i][0], [3+i][0] }  Transposed Col-0(8) as an Ac Row-0(8)
-                "   st4     {v0.s, v1.s, v2.s, v3.s}[0], [x0], #16  \n"  
+                "   st4     {v0.s, v1.s, v2.s, v3.s}[0], [x0], #16  \n" 
 
 
                 "   ldr     q4, [x6], #16           \n"  // v4 = [4+i][0 1 2 3]
@@ -109,29 +109,27 @@ void PACKA(float* A, float* Ac, long M, long K, long LK)
                 "   beq     PACKA_END               \n"  
 
                 "   cmp     x22, #4                 \n"
-                "   blt     K1_PACKA                \n"  // if (x22 < 4) then PACK by KK=1
-                                                         // else PACK by KK=4 first
+                "   blt     K1_PACKA                \n"  // if (x22 < 4)  PACK by KK=1
+                                                         // else          PACK by KK=4 first
 
                 "K4_PACKA:                          \n"
 
                 "   ldr     q0, [x2], #16           \n"  // [0][0:3]
                 "   ldr     q1, [x3], #16           \n"  // [1][0:3]
-                "   ldr     q2, [x4], #16           \n"  // ..
-                "   ldr     q3, [x5], #16           \n"
+                "   ldr     q2, [x4], #16           \n"  // [2][0:3]
+                "   ldr     q3, [x5], #16           \n"  // [3][0:3]
 
                 "   st4     {v0.s, v1.s, v2.s, v3.s}[0], [x0], #16  \n"  // Ac[0][0:3] = { [0][0], [1][0], [2][0], [3][0] }
                 "   ldr     q4, [x6], #16                           \n"  
-                "   st4     {v0.s, v1.s, v2.s, v3.s}[1], [x0], #16  \n"  // Ac[0][4:7] = { [0][1], [1][1], ..             } 
+                "   st4     {v0.s, v1.s, v2.s, v3.s}[1], [x0], #16  \n"  // Ac[1][0:3] = { [0][1], [1][1], [2][1], [3][1] } 
                 "   ldr     q5, [x7], #16                           \n"
-                "   st4     {v0.s, v1.s, v2.s, v3.s}[2], [x0], #16  \n"  //              { [0][2] ..                      }
+                "   st4     {v0.s, v1.s, v2.s, v3.s}[2], [x0], #16  \n"  // Ac[2][0:3] = { [0][2], [1][2], [2][2], [3][2] } 
                 "   ldr     q6, [x8], #16                           \n"
-                "   st4     {v0.s, v1.s, v2.s, v3.s}[3], [x0], #16  \n"  //              { [0][3] ..                      }
+                "   st4     {v0.s, v1.s, v2.s, v3.s}[3], [x0], #16  \n"  // Ac[3][0:3] = { [0][3], [1][3], [2][3], [3][3] } 
                 "   ldr     q7, [x9], #16                           \n"
 
-                // ?? 与之前的排布不同，是 4x8 转置 x2
-
-                "   st4     {v4.s, v5.s, v6.s, v7.s}[0], [x0], #16  \n"  // [4][0] [5][0]
-                "   st4     {v4.s, v5.s, v6.s, v7.s}[1], [x0], #16  \n"  
+                "   st4     {v4.s, v5.s, v6.s, v7.s}[0], [x0], #16  \n"  // Ac[4][0:3]
+                "   st4     {v4.s, v5.s, v6.s, v7.s}[1], [x0], #16  \n"  // Ac[5][0:3]
                 "   st4     {v4.s, v5.s, v6.s, v7.s}[2], [x0], #16  \n"
                 "   st4     {v4.s, v5.s, v6.s, v7.s}[3], [x0], #16  \n"
 
@@ -140,20 +138,20 @@ void PACKA(float* A, float* Ac, long M, long K, long LK)
 
                 "K1_PACKA:                          \n"
 
-                "   ldr     s0, [x2], #4            \n"
-                "   ldr     s1, [x3], #4            \n"
-                "   ldr     s2, [x4], #4            \n"
-                "   ldr     s3, [x5], #4            \n"
+                "   ldr     s0, [x2], #4            \n"  // [0][0]
+                "   ldr     s1, [x3], #4            \n"  // [1][0]
+                "   ldr     s2, [x4], #4            \n"  // [2][0]
+                "   ldr     s3, [x5], #4            \n"  // [3][0]
 
                 "   subs    x22, x22, #1            \n"
 
-                "   st4     {v0.s, v1.s, v2.s, v3.s}[0], [x0], #16  \n"  // Ac[0][0:3]
+                "   st4     {v0.s, v1.s, v2.s, v3.s}[0], [x0], #16  \n"  // Ac[0][0], Ac[1][0], Ac[2][0], Ac[3][0]
                 "   ldr     s4, [x6], #4            \n"
                 "   ldr     s5, [x7], #4            \n"
                 "   ldr     s6, [x8], #4            \n"
                 "   ldr     s7, [x9], #4            \n"
 
-                "   st4     {v4.s, v5.s, v6.s, v7.s}[0], [x0], #16  \n"  // Ac[0][4:7]
+                "   st4     {v4.s, v5.s, v6.s, v7.s}[0], [x0], #16  \n"  // Ac[4:7][0]
 
                 "   bgt     K1_PACKA                \n"
 
