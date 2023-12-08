@@ -9,19 +9,7 @@
 #include "DCmult.h" 
 #include "Cmult.h"
 
-#define FILE_OUTPUT false  // 是否输出从 stdout 转到 文件
 #define ANS_CHECK false  // 是否进行答案检查
-
-/* 使用 OS 代替 cout ，以在 FILE_OUTPUT == true 时输出到文件 */
-string ouput_file = "output/output.dat";
-#if FILE_OUTPUT == true
-    #define OS ofs
-    std::ofstream ofs(ouput_file, std::ios::app);
-#else
-    #define OS cout
-#endif
-
-
 
 int main() {
     // 参数 2 =======================================
@@ -30,9 +18,9 @@ int main() {
     // const int ni = 4, nj = 5, nk = 3;
     const int ni = 400, nj = 300, nk = 500;
 
-    OS << "Test start" << endl;
-    OS << "Loop: " << data_loop << "x" << compute_loop << endl;
-    OS << "Size: i" << ni << " j" << nj << " k" << nk << endl;
+    cout << "Test start" << endl;
+    cout << "Loop: " << data_loop << "x" << compute_loop << endl;
+    cout << "Size: i" << ni << " j" << nj << " k" << nk << endl;
     #if FILE_OUTPUT == true
     cout << "File output: " << ouput_file << endl; 
     #endif
@@ -77,9 +65,9 @@ int main() {
             double dur = Dur(start, end);
             dur /= 1000.0;
             total_time1 += dur; 
-            OS << "compute time: " << dur << " msecs" << endl;
+            cout << "compute time: " << dur << " msecs" << endl;
         }
-        OS << "  avg time1: " << total_time1/compute_loop << " msecs for data: " << data << endl;
+        cout << "  avg time1: " << total_time1/compute_loop << " msecs for data: " << data << endl;
         total_time2 += total_time1/compute_loop;
 
         // 答案检查 ==============================
@@ -102,10 +90,10 @@ int main() {
         free(B);
         free(C);
     }
-    OS << "    total avg time2: " << total_time2/data_loop << " msecs" << endl;
+    cout << "    total avg time2: " << total_time2/data_loop << " msecs" << endl;
 
     char cur_time[50];
     time_t now = time(NULL);
     strftime(cur_time, 50, "%x %X", localtime(&now));
-    OS << "Test Finished at " << cur_time << endl;
+    cout << "Test Finished at " << cur_time << endl;
 }

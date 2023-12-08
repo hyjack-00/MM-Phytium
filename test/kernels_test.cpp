@@ -289,7 +289,6 @@
 //     #endif
 // }
 
-
 #define TEST_N_F32 1024
 
 void test_f32() {
