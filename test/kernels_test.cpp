@@ -7,7 +7,6 @@
 #include <time.h>
 #include <queue>
 
-#include <Eigen/Eigen>
 #include <omp.h>
 
 #include "test_helpers.h"
@@ -111,11 +110,11 @@ void test_f32() {
 
             /* Timing Zone -- */
 
-            // SMM_kernel_f32_single(C, A, B, ni, nj, nk, nj);
-            kernel_f32_packAB(A, B, C, ni, nj, nk, 
-                mkf32_4x8k8_ldB_fchC_pkAB,
-                packf32_4x8k8_A,
-                packf32_4x8k8_B);
+            SMM_kernel_f32_single(C, A, B, ni, nj, nk, nj);
+            // kernel_f32_packAB(A, B, C, ni, nj, nk, 
+            //     mkf32_4x8k8_ldB_fchC_pkAB,
+            //     packf32_4x8k8_A,
+            //     packf32_4x8k8_B);
 
             /* -- Timing Zone */
 
@@ -123,9 +122,9 @@ void test_f32() {
             double dur = Dur(start, end);
             dur /= 1000.0;
             time += dur; 
-            cout << "compute time: " << dur << " msecs" << endl;
+            // cout << "compute time: " << dur << " msecs" << endl;
         }
-        cout << "  avg time: " << time/compute_loop << " msecs for data: " << data_i << endl;
+        // cout << "  avg time: " << time/compute_loop << " msecs for data: " << data_i << endl;
         total_time += time/compute_loop;
 
         // // Answer Check, commented if not used
@@ -153,5 +152,10 @@ void test_f32() {
 
 int main() {
     // test_s32();
-    test_f32();
+    for (int size = 16; size <= 4096; size *= 2) {
+        TEST_Ni_F32 = size;
+        TEST_Nj_F32 = size;
+        TEST_Nk_F32 = size;
+        test_f32();
+    }
 }

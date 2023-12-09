@@ -127,3 +127,38 @@ Overhead  Command      Shared Object Symbol
 - [x] 与 fetch 相对的 append：初始化 C 寄存器时直接全 0 ，最后再 取出相加存入
     - 没有提升
 - [ ] 为什么 1024 大小如此特殊？
+
+
+# 结果
+
+libshalom fp32
+
+```
+Size: i16 j16 k16
+    total avg time: 0.00211111 msecs
+    3.88042GFLOPS, 22.0478% peak
+Size: i32 j32 k32
+    total avg time: 0.00666667 msecs
+    9.8304GFLOPS, 55.8545% peak
+Size: i64 j64 k64
+    total avg time: 0.0431111 msecs
+    12.1613GFLOPS, 69.0984% peak
+Size: i128 j128 k128
+    total avg time: 0.260556 msecs
+    16.0975GFLOPS, 91.4633% peak
+Size: i256 j256 k256
+    total avg time: 1.99433 msecs
+    16.8249GFLOPS, 95.5959% peak
+Size: i512 j512 k512
+    total avg time: 15.7112 msecs
+    17.0856GFLOPS, 97.0772% peak
+Size: i1024 j1024 k1024
+    total avg time: 131.822 msecs
+    16.2908GFLOPS, 92.5613% peak
+Size: i2048 j2048 k2048
+    total avg time: 1094.78 msecs
+    15.6925GFLOPS, 89.1622% peak
+Size: i4096 j4096 k4096
+    total avg time: 9532.35 msecs
+    14.4182GFLOPS, 81.9214% peak
+```
