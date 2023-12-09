@@ -1,7 +1,5 @@
 #include "microkernels.h"
 
-std::ofstream mk_ofs("output/mk_log.dat");
-
 //# Micro-Kernel
 
 // NEON example [original]

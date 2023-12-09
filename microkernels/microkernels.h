@@ -8,6 +8,7 @@ using std::endl;
 
 #define size_t unsigned int  // 覆盖 unsigned long
 
+//## s32 ================================================================================
 //# Micro-Kernel
 typedef void mks32_t(
     const int32_t *A, const int32_t *B, int32_t *C,
@@ -105,10 +106,10 @@ void mks32_4x8k8_ldB_apdC_pkAB(
 
 //# Matrix Repacking
 typedef void packs32_A_t(
-    int32_t *A, int32_t *Apack,
+    const int32_t *A, int32_t *Apack,
     size_t it, size_t kt, size_t LDA);
 typedef void packs32_B_t(
-    int32_t *B, int32_t *Bpack,
+    const int32_t *B, int32_t *Bpack,
     size_t kt, size_t jt, size_t LDB);
 typedef void packs32_C_t(
     int32_t *C, int32_t *Cpack,
@@ -149,6 +150,33 @@ void packs32_8x4k8_B(
 
 
 
+
+//## f32 ================================================================================
+
+typedef void mkf32_t(
+    const float32_t *A, const float32_t *B, float32_t *C,
+    size_t ni, size_t nj, size_t nk,
+    size_t LDA, size_t LDBC);
+typedef void mkf32_pAB_t(
+    const float32_t *A, const float32_t *B, float32_t *C,
+    size_t ni, size_t nj, size_t nk, size_t LDC);
+typedef void packf32_A_t(
+    float32_t *A, float32_t *Apack,
+    size_t it, size_t kt, size_t LDA);
+typedef void packf32_B_t(
+    float32_t *B, float32_t *Bpack,
+    size_t kt, size_t jt, size_t LDB);
+
+// best f32
+void mkf32_4x8k8_ldB_fchC_pkAB(
+    const float32_t *A, const float32_t *B, float32_t *C,
+    size_t ni, size_t nj, size_t nk, size_t LDC);
+void packf32_4x8k8_A(
+    float32_t *A, float32_t *Apack,
+    size_t it, size_t kt, size_t LDA);
+void packf32_4x8k8_B(
+    float32_t *B, float32_t *Bpack,
+    size_t kt, size_t jt, size_t LDB);
 
 // SMM (libShalom)
 extern "C" { 

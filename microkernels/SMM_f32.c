@@ -36,16 +36,16 @@ void SMM_packf32_A(float* A, float* Ac, long M, long K, long LK)
 
                 "PACKA:                             \n"
 
-            //  "   prfm    PLDL1KEEP, [x2, #128]   \n"  // prefetch AA[0][128]
-            //  "   prfm    PLDL1KEEP, [x3, #128]   \n"  // prefetch AA[1][128]
+                "   prfm    PLDL1KEEP, [x2, #128]   \n"  // prefetch AA[0][128]
+                "   prfm    PLDL1KEEP, [x3, #128]   \n"  // prefetch AA[1][128]
 
                 "   ldr     q0, [x2], #16           \n"  // v0 = [0+i][0 1 2 3] +k
                 "   ldr     q1, [x3], #16           \n"  // v1 = [1+i][0 1 2 3]
                 "   ldr     q2, [x4], #16           \n"  // v2 = [2+i][0 1 2 3]
                 "   ldr     q3, [x5], #16           \n"  // v3 = [3+i][0 1 2 3]
 
-            //  "   prfm    PLDL1KEEP, [x4, #128]   \n"
-            //  "   prfm    PLDL1KEEP, [x5, #128]   \n"
+                "   prfm    PLDL1KEEP, [x4, #128]   \n"
+                "   prfm    PLDL1KEEP, [x5, #128]   \n"
 
                 // Ac[0][0-3] = { [0+i][0], [1+i][0], [2+i][0], [3+i][0] }  Transposed Col-0(8) as an Ac Row-0(8)
                 "   st4     {v0.s, v1.s, v2.s, v3.s}[0], [x0], #16  \n"  
@@ -60,8 +60,8 @@ void SMM_packf32_A(float* A, float* Ac, long M, long K, long LK)
                 "   st4     {v4.s, v5.s, v6.s, v7.s}[0], [x0], #16  \n"
 
 
-            //  "   prfm    PLDL1KEEP, [x6, #128]   \n"
-            //  "   prfm    PLDL1KEEP, [x7, #128]   \n"
+                "   prfm    PLDL1KEEP, [x6, #128]   \n"
+                "   prfm    PLDL1KEEP, [x7, #128]   \n"
 
                 "   ldr     q8, [x2], #16                           \n"  // v8 = [0+i][4 5 6 7] 交叉 load store
                 "   st4     {v0.s, v1.s, v2.s, v3.s}[1], [x0], #16  \n"  // Ac[1][0-3] = { [0+i][1], [1+i][1]... }
@@ -73,8 +73,8 @@ void SMM_packf32_A(float* A, float* Ac, long M, long K, long LK)
                 "   ldr     q11, [x5], #16                          \n"
                 "   st4     {v4.s, v5.s, v6.s, v7.s}[2], [x0], #16  \n"  // Ac[2]
 
-            //  "   prfm    PLDL1KEEP, [x8, #128]   \n"
-            //  "   prfm    PLDL1KEEP, [x9, #128]   \n"
+                "   prfm    PLDL1KEEP, [x8, #128]   \n"
+                "   prfm    PLDL1KEEP, [x9, #128]   \n"
 
 
                 "   ldr     q12, [x6], #16                              \n"
@@ -195,7 +195,7 @@ void SMM_mkf32(float *C, float *A, float *B,
 
         "   ldr     q0, [x11], #16                                          \n"
 
-    //  "   prfm    PLDL1KEEP, [x11, #512]                          \n"
+        "   prfm    PLDL1KEEP, [x11, #512]                          \n"
 
         "   ldp     q2, q3, [x12]                                               \n"
         "   fmul    v8.4s, v2.4s, v0.s[0]                               \n"
@@ -204,21 +204,21 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   ldr     q1, [x11], #16                                          \n"
         "   fmul    v10.4s, v4.4s, v0.s[0]                          \n"
 
-    //  "   prfm    PLDL1KEEP, [x13, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x13, #64]                               \n"
 
         "   add     x12, x12, x9, lsl #3                                \n"
         "   fmul    v11.4s, v2.4s, v0.s[1]                          \n"
         "   fmul    v12.4s, v3.4s, v0.s[1]                          \n"
         "   fmul    v13.4s, v4.4s, v0.s[1]                          \n"
 
-    //  "   prfm    PLDL2KEEP, [x12, x29]                               \n"
+        "   prfm    PLDL2KEEP, [x12, x29]                               \n"
         "   ldr     q5, [x13]                                                       \n"
 
         "   fmul    v14.4s, v2.4s, v0.s[2]                          \n"
         "   fmul    v15.4s, v3.4s, v0.s[2]                          \n"
         "   fmul    v16.4s, v4.4s, v0.s[2]                          \n"
 
-    //  "   prfm    PLDL1KEEP, [x12, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x12, #64]                               \n"
         "   ldr     q6, [x13, #16]                                          \n"
 
         "   fmul    v17.4s, v2.4s, v0.s[3]                          \n"
@@ -245,7 +245,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmul    v28.4s, v4.4s, v1.s[2]                          \n"
 
         "   str     q4, [x24], #16                                          \n"
-    //  "   prfm    PLDL2KEEP, [x13, x29]                           \n"
+        "   prfm    PLDL2KEEP, [x13, x29]                           \n"
 
         "   fmul    v29.4s, v2.4s, v1.s[3]                          \n"
         "   fmul    v30.4s, v3.4s, v1.s[3]                          \n"
@@ -260,7 +260,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         ".macro PACK_KERNEL8x12_K0                                  \n"
 
 
-    //  "   prfm PLDL1KEEP, [x11, #512]                             \n"
+        "   prfm PLDL1KEEP, [x11, #512]                             \n"
         "   ldp     q5, q6, [x13]                                           \n"
         "   fmla    v8.4s, v2.4s, v0.s[0]                               \n"
         "   fmla    v9.4s, v3.4s, v0.s[0]                               \n"
@@ -273,13 +273,13 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v13.4s, v4.4s, v0.s[1]                          \n"
 
         "   add     x13, x13, x9, lsl #3                            \n"
-    //  "   prfm PLDL2KEEP, [x13, x29]                              \n"
+        "   prfm PLDL2KEEP, [x13, x29]                              \n"
 
         "   fmla    v14.4s, v2.4s, v0.s[2]                          \n"
         "   fmla    v15.4s, v3.4s, v0.s[2]                          \n"
         "   fmla    v16.4s, v4.4s, v0.s[2]                          \n"
 
-    //  "   prfm PLDL1KEEP, [x13, #64]                              \n"
+        "   prfm PLDL1KEEP, [x13, #64]                              \n"
 
         "   fmla    v17.4s, v2.4s, v0.s[3]                          \n"
         "   fmla    v18.4s, v3.4s, v0.s[3]                          \n"
@@ -303,7 +303,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v27.4s, v3.4s, v1.s[2]                          \n"
         "   fmla    v28.4s, v4.4s, v1.s[2]                          \n"
 
-    //  "   prfm PLDL1KEEP, [x11, #576]                             \n"
+        "   prfm PLDL1KEEP, [x11, #576]                             \n"
 
         "   fmla    v29.4s, v2.4s, v1.s[3]                          \n"
         "   fmla    v30.4s, v3.4s, v1.s[3]                          \n"
@@ -331,13 +331,13 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v13.4s, v7.4s, v0.s[1]                          \n"
 
         "   add     x12, x12, x9, lsl #3                            \n"
-    //  "   prfm PLDL2KEEP, [x12, x29]                              \n"
+        "   prfm PLDL2KEEP, [x12, x29]                              \n"
 
         "   fmla    v14.4s, v5.4s, v0.s[2]                          \n"
         "   fmla    v15.4s, v6.4s, v0.s[2]                          \n"
         "   fmla    v16.4s, v7.4s, v0.s[2]                          \n"
 
-    //  "   prfm PLDL1KEEP, [x12, #64]                              \n"
+        "   prfm PLDL1KEEP, [x12, #64]                              \n"
 
         "   fmla    v17.4s, v5.4s, v0.s[3]                          \n"
         "   fmla    v18.4s, v6.4s, v0.s[3]                          \n"
@@ -417,29 +417,29 @@ void SMM_mkf32(float *C, float *A, float *B,
         ".macro M8N12_PACK_ADD_C                                        \n"
 
 
-    //  "   prfm    PLDL1KEEP, [x25, #64]                               \n"
-    //  "   prfm    PLDL1KEEP, [x26, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x25, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x26, #64]                               \n"
 
         "   ldp     q0, q1, [x25]                                           \n"
         "   fadd    v8.4s, v8.4s, v0.4s                                 \n"
-    //  "   prfm    PLDL1KEEP, [x27, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x27, #64]                               \n"
         "   ldr     q2, [x25, #32]                                          \n"
         "   fadd    v9.4s, v9.4s, v1.4s                                 \n"
         "   ldp     q3, q4, [x26]                                           \n"
-    //  "   prfm    PLDL1KEEP, [x28, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x28, #64]                               \n"
         "   fadd    v10.4s, v10.4s, v2.4s                           \n"
 
-    //  "   prfm    PLDL1KEEP, [x15, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x15, #64]                               \n"
         "   ldr     q5, [x26, #32]                                          \n"
         "   fadd    v11.4s, v11.4s, v3.4s                           \n"
-    //  "   prfm    PLDL1KEEP, [x16, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x16, #64]                               \n"
         "   ldp     q6, q7, [x27]                                           \n"
         "   fadd    v12.4s, v12.4s, v4.4s                           \n"
-    //  "   prfm    PLDL1KEEP, [x17, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x17, #64]                               \n"
         "   ldr     q0, [x27, #32]                                          \n"
         "   fadd    v13.4s, v13.4s, v5.4s                           \n"
 
-    //  "   prfm    PLDL1KEEP, [x18, #64]                               \n"
+        "   prfm    PLDL1KEEP, [x18, #64]                               \n"
 
         "   ldp     q1, q2, [x28]                                           \n"
         "   fadd    v14.4s, v14.4s, v6.4s                           \n"
@@ -489,49 +489,49 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   str     q10, [x25, #32]                                         \n"
         "   add     x25, x25, x9, lsl #5                                \n"
 
-    //  "   prfm    PLDL2KEEP, [x25, x29]                               \n"
+        "   prfm    PLDL2KEEP, [x25, x29]                               \n"
 
         "   stp     q11, q12, [x26]                                         \n"
         "   str     q13, [x26, #32]                                         \n"
         "   add     x26, x26, x9, lsl #5                                \n"
 
-    //  "   prfm    PLDL2KEEP, [x26, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x26, #64]                               \n"
 
         "   stp     q14, q15, [x27]                                         \n"
         "   str     q16, [x27, #32]                                         \n"
         "   add     x27, x27, x9, lsl #5                                \n"
 
-    //  "   prfm    PLDL2KEEP, [x27, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x27, #64]                               \n"
 
         "   stp     q17, q18, [x28]                                         \n"
         "   str     q19, [x28, #32]                                         \n"
         "   add     x28, x28, x9, lsl #5                                \n"
 
-    //  "   prfm    PLDL2KEEP, [x28, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x28, #64]                               \n"
 
         "   stp     q20, q21, [x15]                                         \n"
         "   str     q22, [x15, #32]                                         \n"
         "   add     x15, x15, x9, lsl #5                                \n"
 
-    //  "   prfm    PLDL2KEEP, [x15, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x15, #64]                               \n"
 
         "   stp     q23, q24, [x16]                                         \n"
         "   str     q25, [x16, #32]                                         \n"
         "   add     x16, x16, x9, lsl #5                                \n"
 
-    //  "   prfm    PLDL2KEEP, [x16, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x16, #64]                               \n"
 
         "   stp     q26, q27, [x17]                                         \n"
         "   str     q28, [x17, #32]                                         \n"
         "   add     x17, x17, x9, lsl #5                                \n"
 
-    //  "   prfm    PLDL2KEEP, [x17, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x17, #64]                               \n"
 
         "   stp     q29, q30, [x18]                                         \n"
         "   str     q31, [x18, #32]                                         \n"
         "   add     x18, x18, x9, lsl #5                                \n"
 
-    //  "   prfm    PLDL2KEEP, [x18, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x18, #64]                               \n"
 
         ".endm                                                                          \n"
 
@@ -541,7 +541,7 @@ void SMM_mkf32(float *C, float *A, float *B,
 
 
         "   ldp     q0, q1, [x11], #32                                  \n"
-    //  "   prfm    PLDL1KEEP, [x11, #2560]                         \n"
+        "   prfm    PLDL1KEEP, [x11, #2560]                         \n"
         "   ldr     q2, [x24]                                                       \n"
 
         "   fmul    v8.4s,  v2.4s, v0.s[0]                          \n"
@@ -574,7 +574,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmul    v10.4s, v4.4s, v0.s[0]                          \n"
         "   fmul    v13.4s, v4.4s, v0.s[1]                          \n"
         "   fmul    v16.4s, v4.4s, v0.s[2]                          \n"
-    //  "   prfm    PLDL1KEEP, [x11, #2560]                         \n"
+        "   prfm    PLDL1KEEP, [x11, #2560]                         \n"
         "   fmul    v19.4s, v4.4s, v0.s[3]                          \n"
         "   fmul    v22.4s, v4.4s, v1.s[0]                          \n"
         "   fmul    v25.4s, v4.4s, v1.s[1]                          \n"
@@ -607,7 +607,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v12.4s, v3.4s, v0.s[1]                          \n"
         "   fmla    v15.4s, v3.4s, v0.s[2]                          \n"
         "   fmla    v18.4s, v3.4s, v0.s[3]                          \n"
-    //  "   prfm PLDL1KEEP, [x11, #2560]                            \n"
+        "   prfm PLDL1KEEP, [x11, #2560]                            \n"
         "   fmla    v21.4s, v3.4s, v1.s[0]                          \n"
         "   fmla    v24.4s, v3.4s, v1.s[1]                          \n"
         "   fmla    v27.4s, v3.4s, v1.s[2]                          \n"
@@ -619,7 +619,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v13.4s, v4.4s, v0.s[1]                          \n"
         "   fmla    v16.4s, v4.4s, v0.s[2]                          \n"
         "   fmla    v19.4s, v4.4s, v0.s[3]                          \n"
-    //  "   prfm PLDL1KEEP, [x11, #2624]                            \n"
+        "   prfm PLDL1KEEP, [x11, #2624]                            \n"
         "   fmla    v22.4s, v4.4s, v1.s[0]                          \n"
         "   fmla    v25.4s, v4.4s, v1.s[1]                          \n"
         "   fmla    v28.4s, v4.4s, v1.s[2]                          \n"
@@ -651,7 +651,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v12.4s, v2.4s, v5.s[1]                          \n"
         "   fmla    v15.4s, v2.4s, v5.s[2]                          \n"
         "   fmla    v18.4s, v2.4s, v5.s[3]                          \n"
-    //  "   prfm PLDL1KEEP, [x24, #256]                             \n"
+        "   prfm PLDL1KEEP, [x24, #256]                             \n"
         "   fmla    v21.4s, v2.4s, v6.s[0]                          \n"
         "   fmla    v24.4s, v2.4s, v6.s[1]                          \n"
         "   fmla    v27.4s, v2.4s, v6.s[2]                          \n"
@@ -694,7 +694,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v12.4s, v7.4s, v0.s[1]                          \n"
         "   fmla    v15.4s, v7.4s, v0.s[2]                          \n"
         "   fmla    v18.4s, v7.4s, v0.s[3]                          \n"
-    //  "   prfm PLDL1KEEP, [x11, #2560]                            \n"
+        "   prfm PLDL1KEEP, [x11, #2560]                            \n"
         "   fmla    v21.4s, v7.4s, v1.s[0]                          \n"
         "   fmla    v24.4s, v7.4s, v1.s[1]                          \n"
         "   fmla    v27.4s, v7.4s, v1.s[2]                          \n"
@@ -705,7 +705,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v10.4s, v2.4s, v0.s[0]                          \n"
         "   fmla    v13.4s, v2.4s, v0.s[1]                          \n"
         "   fmla    v16.4s, v2.4s, v0.s[2]                          \n"
-    //  "   prfm PLDL1KEEP, [x11, #2624]                            \n"
+        "   prfm PLDL1KEEP, [x11, #2624]                            \n"
         "   fmla    v19.4s, v2.4s, v0.s[3]                          \n"
         "   fmla    v22.4s, v2.4s, v1.s[0]                          \n"
         "   fmla    v25.4s, v2.4s, v1.s[1]                          \n"
@@ -738,7 +738,7 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   fmla    v12.4s, v4.4s, v5.s[1]                          \n"
         "   fmla    v15.4s, v4.4s, v5.s[2]                          \n"
         "   fmla    v18.4s, v4.4s, v5.s[3]                          \n"
-    //  "   prfm PLDL1KEEP, [x24, #256]                             \n"
+        "   prfm PLDL1KEEP, [x24, #256]                             \n"
         "   fmla    v21.4s, v4.4s, v6.s[0]                          \n"
         "   fmla    v24.4s, v4.4s, v6.s[1]                          \n"
         "   fmla    v27.4s, v4.4s, v6.s[2]                          \n"
@@ -808,8 +808,8 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   ldr     x9, %[LN]                                                   \n"
         "   ldr     x6, %[LK]                                                       \n"
 
-    //  "   prfm    PLDL1KEEP, [x1, #512]               \n"
-    //  "   prfm    PLDL1KEEP, [x2, #64]                \n"
+        "   prfm    PLDL1KEEP, [x1, #512]               \n"
+        "   prfm    PLDL1KEEP, [x2, #64]                \n"
 
         "   ldr     x10, %[SB]                                                  \n"
         "   ldr     x8, %[k_tag]                                                \n"
@@ -824,22 +824,22 @@ void SMM_mkf32(float *C, float *A, float *B,
         "BEGIN_N12:                                                                 \n"
 
         "   mov     x25, x0                                                     \n"   //C1*
-    //  "   prfm    PLDL2KEEP, [x25, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x25, #64]                               \n"
         "   add     x26, x25, x9, lsl #2                                \n"   //C2*
-    //  "   prfm    PLDL2KEEP, [x26, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x26, #64]                               \n"
         "   add     x27, x25, x9, lsl #3                                \n"   //C3*
-    //  "   prfm    PLDL2KEEP, [x27, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x27, #64]                               \n"
         "   add     x28, x26, x9, lsl #3                                \n"   //C4*
-    //  "   prfm    PLDL2KEEP, [x28, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x28, #64]                               \n"
 
         "   add     x15, x27, x9, lsl #3                                \n"     //C5*
-    //  "   prfm    PLDL2KEEP, [x15, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x15, #64]                               \n"
         "   add     x16, x28, x9, lsl #3                                \n"     //C6*
-    //  "   prfm    PLDL2KEEP, [x16, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x16, #64]                               \n"
         "   add     x17, x15, x9, lsl #3                                \n"     //C7*
-    //  "   prfm    PLDL2KEEP, [x17, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x17, #64]                               \n"
         "   add     x18, x16, x9, lsl #3                                \n"     //C8*
-    //  "   prfm    PLDL2KEEP, [x18, #64]                               \n"
+        "   prfm    PLDL2KEEP, [x18, #64]                               \n"
 
         "   mov     x11, x1                                                     \n"   // address_A
         "   lsr     x21, x3, #3                                                 \n"   // M / 8
@@ -859,9 +859,9 @@ void SMM_mkf32(float *C, float *A, float *B,
         "   mov     x12, x2                                                         \n"   // B0*
         "   add     x13, x12, x9, lsl #2                                \n"   // B0 + sizeof(float) * LN
 
-    //  "   prfm    PLDL1KEEP, [x12, #64]                           \n"
-    //  "   prfm    PLDL1KEEP, [x13, #64]                           \n"
-    //  "   prfm    PLDL1KEEP, [x11, #256]                      \n"
+        "   prfm    PLDL1KEEP, [x12, #64]                           \n"
+        "   prfm    PLDL1KEEP, [x13, #64]                           \n"
+        "   prfm    PLDL1KEEP, [x11, #256]                      \n"
 
 
         "PACK_Body_K:                                                               \n"
@@ -915,8 +915,8 @@ void SMM_mkf32(float *C, float *A, float *B,
             "BEGIN_M8:                                          \n" 
 
             "   mov     x24, x10                                \n"   //  address_B, x11 is address_A + offset
-        //  "   prfm    PLDL1KEEP, [x24, #128]                  \n"
-        //  "   prfm    PLDL1KEEP, [x11, #256]                  \n"
+            "   prfm    PLDL1KEEP, [x24, #128]                  \n"
+            "   prfm    PLDL1KEEP, [x11, #256]                  \n"
 
             "Body_K:                                            \n"
 
