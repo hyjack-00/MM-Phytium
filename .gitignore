@@ -8,6 +8,7 @@ output
 *.dat
 *.txt
 *.data
+*.exe
 
 Makefile_
 build.sh
