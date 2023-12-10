@@ -1,6 +1,3 @@
-#include <iostream>
-#include <armpl.h>
-
 #include <cstdio>
 #include <iostream>
 #include <fstream>
@@ -8,14 +5,11 @@
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
-#include <vector>
+#include <queue>
 
 #include <omp.h>
-#include <arm_neon.h>
 
-#include "test_helpers.h"
-
-using namespace std;
+#include "LibShalom.h"
 
 #define MIN(x,y) (((x)<(y))?(x):(y))
 
@@ -32,7 +26,7 @@ void test_f32() {
     // const int ni = TEST_N_F32, nj = TEST_N_F32, nk = TEST_N_F32;
     const int ni = TEST_Ni_F32, nj = TEST_Nj_F32, nk = TEST_Nk_F32;
 
-    // cout << "Loop: " << data_loop << "x" << compute_loop << endl;
+    cout << "Loop: " << data_loop << "x" << compute_loop << endl;
     cout << "Size: i" << ni << " j" << nj << " k" << nk << endl;
 
     double total_time = 0;
@@ -44,8 +38,7 @@ void test_f32() {
         rand_mat_f32(B, nk * nj, 5678);
 
         for (int i = 0; i < warmup_loop; i ++) {
-            // 执行 GEMM
-            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, ni, nj, nk, 1.0, A, nk, B, nj, 0.0, C, nj);
+            LibShalom_sgemm(NoTrans, NoTrans, C, A, B, ni, nj, nk);
         }
 
         double time = 0;
@@ -55,8 +48,9 @@ void test_f32() {
 
             /* Timing Zone -- */
 
-            // 执行 GEMM
-            cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, ni, nj, nk, 1.0, A, nk, B, nj, 0.0, C, nj);
+            LibShalom_sgemm(NoTrans, NoTrans, C, A, B, ni, nj, nk);
+
+            /* -- Timing Zone */
 
             auto end = Clock::now();
             double dur = Dur(start, end);
@@ -91,7 +85,6 @@ void test_f32() {
 }
 
 int main() {
-    // test_s32();
     vector<int> sizes = {4, 8, 16, 32, 64, 128, 256, 512, 768, 1024, 2048, 4096};
     for (auto size : sizes) {
         TEST_Ni_F32 = size;

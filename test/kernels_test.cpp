@@ -127,16 +127,16 @@ void test_f32() {
         // cout << "  avg time: " << time/compute_loop << " msecs for data: " << data_i << endl;
         total_time += time/compute_loop;
 
-        // // Answer Check, commented if not used
-        //     float32_t *D = (float32_t *) malloc(sizeof(float32_t) * ni * nj);
-        //     zeros_f32(D, ni * nj);
-        //     auto start = Clock::now();
-        //     naive(A, B, D, ni, nj, nk);
-        //     auto end = Clock::now();
-        //     double dur = Dur(start, end);
-        //     cout << "naive time: " << dur / 1e6 << " secs" << endl;
-        //     ans_check_f32(C, D, ni, nj); 
-        //     free(D);
+        // Answer Check, commented if not used
+            float32_t *D = (float32_t *) malloc(sizeof(float32_t) * ni * nj);
+            zeros_f32(D, ni * nj);
+            auto start = Clock::now();
+            naive(A, B, D, ni, nj, nk);
+            auto end = Clock::now();
+            double dur = Dur(start, end);
+            cout << "naive time: " << dur / 1e6 << " secs" << endl;
+            ans_check_f32(C, D, ni, nj); 
+            free(D);
 
         free(A);
         free(B);

@@ -7,6 +7,7 @@ using namespace std;
 
 const int SIZE = 1024;
 const int FOR = 5;
+const int FOR_warmup = 2;
 
 void int32() {
     MatrixXi A = MatrixXi::Random(SIZE, SIZE);
