@@ -131,7 +131,7 @@ Overhead  Command      Shared Object Symbol
 
 # 结果
 
-libshalom fp32
+libshalom large fp32 
 
 ```
 Size: i16 j16 k16
@@ -160,5 +160,5 @@ Size: i2048 j2048 k2048
     15.6925GFLOPS, 89.1622% peak
 Size: i4096 j4096 k4096
     total avg time: 9532.35 msecs
-    14.4182GFLOPS, 81.9214% peak
+    15.4182GFLOPS, 81.9214% peak
 ```

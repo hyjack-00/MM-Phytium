@@ -95,17 +95,24 @@ void zeros_s32(int *mat, int length_1d) {
 void zeros_f32(float *mat, int length_1d) {
     for (int i = 0; i < length_1d; i ++) mat[i] = 0.;
 }
+void zeros_f64(double *mat, int length_1d) {
+    for (int i = 0; i < length_1d; i ++) mat[i] = 0.;
+}
 
 void rand_mat_s32(int *mat, int length_1d, unsigned int seed) {
     srand(seed);
     for (int i = 0; i < length_1d; i ++) 
         mat[i] = (rand() % (RAND_UB - RAND_LB)) + RAND_LB;
 }
-
 void rand_mat_f32(float *mat, int length_1d, unsigned int seed) {
     srand(seed);
     for (int i = 0; i < length_1d; i ++) 
         mat[i] = ((float)rand() / ((float)RAND_MAX / (RAND_UB - RAND_LB))) + RAND_LB;
+}
+void rand_mat_f64(double *mat, int length_1d, unsigned int seed) {
+    srand(seed);
+    for (int i = 0; i < length_1d; i ++) 
+        mat[i] = ((double)rand() / ((double)RAND_MAX / (RAND_UB - RAND_LB))) + RAND_LB;
 }
 
 
