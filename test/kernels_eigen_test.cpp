@@ -7,7 +7,7 @@ using namespace std;
 
 const int SIZE = 1024;
 const int FOR = 5;
-const int FOR_warmup = 2;
+const double ops = (double) SIZE * SIZE * SIZE * 2;
 
 void int32() {
     MatrixXi A = MatrixXi::Random(SIZE, SIZE);
@@ -22,10 +22,12 @@ void int32() {
     std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
 
-    cout << "Eigen int32: " << time_span.count() / FOR << endl;
+    double time = time_span.count() / FOR;
+    cout << "Eigen int32: " << time << "s " 
+        << ops / time / 1e9 << " GOPS" << endl;
 
     // Optional: Print result to prevent compiler optimization
-    cout << C(0, 0) << endl;
+    // cout << C(0, 0) << endl;
 }
 
 void fp32() {
@@ -41,10 +43,12 @@ void fp32() {
     std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
 
-    cout << "Eigen fp32: " << time_span.count() / FOR << endl;
+    double time = time_span.count() / FOR;
+    cout << "Eigen fp32: " << time << "s " 
+        << ops / time / 1e9 << " GFLOPS" << endl;
 
     // Optional: Print result to prevent compiler optimization
-    cout << C(0, 0) << endl;
+    // cout << C(0, 0) << endl;
 }
 
 void fp64() {
@@ -60,10 +64,13 @@ void fp64() {
     std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> time_span = std::chrono::duration_cast<std::chrono::duration<double>>(t2 - t1);
 
-    cout << "Eigen fp64: " << time_span.count() / FOR << endl;
+    double time = time_span.count() / FOR;
+    cout << "Eigen fp64: " << time << "s " 
+        << ops / time / 1e9 << " GFLOPS" << endl;
+
 
     // Optional: Print result to prevent compiler optimization
-    cout << C(0, 0) << endl;
+    // cout << C(0, 0) << endl;
 }
 
 int main() {

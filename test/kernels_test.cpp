@@ -110,7 +110,7 @@ void test_f32() {
 
             /* Timing Zone -- */
 
-            SMM_kernel_f32_single(C, A, B, ni, nj, nk, nj);
+            // SMM_kernel_f32_single(C, A, B, ni, nj, nk, nj);
             // kernel_f32_packAB(A, B, C, ni, nj, nk, 
             //     mkf32_4x8k8_ldB_fchC_pkAB,
             //     packf32_4x8k8_A,

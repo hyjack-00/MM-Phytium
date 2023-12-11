@@ -24,7 +24,7 @@ int TEST_Nk_F32 = 1024;
 void test_f32() {
     const int data_loop = 5;
     const int warmup_loop = 5;
-    const int compute_loop = 10;
+    const int compute_loop = 10000;
     const int ni = TEST_Ni_F32, nj = TEST_Nj_F32, nk = TEST_Nk_F32;
 
     cout << "Size: i" << ni << " j" << nj << " k" << nk << endl;
@@ -57,6 +57,13 @@ void test_f32() {
         // cout << "  avg time: " << time/compute_loop << " msecs for data: " << data_i << endl;
         total_time += time / compute_loop;
 
+        // // Answer Check, commented if not used
+        // float32_t *D = (float32_t *) malloc(sizeof(float32_t) * ni * nj);
+        // zeros_f32(D, ni * nj);
+        // naive(A, B, D, ni, nj, nk);
+        // ans_check_f32(C, D, ni, nj); 
+        // free(D);
+
         free(A);
         free(B);
         free(C);
@@ -72,7 +79,7 @@ void test_f32() {
 void test_f64() {
     const int data_loop = 5;
     const int warmup_loop = 5;
-    const int compute_loop = 10;
+    const int compute_loop = 100;
     const int ni = TEST_Ni_F32, nj = TEST_Nj_F32, nk = TEST_Nk_F32;
 
     cout << "Size: i" << ni << " j" << nj << " k" << nk << endl;
@@ -117,14 +124,16 @@ void test_f64() {
 }
 
 int main() {
-    vector<int> sizes = {16, 32, 64, 128, 256, 512, 768, 1024, 2048, 4096};
-    cout << "\nfp32" << endl;
-    for (auto size : sizes) {
-        TEST_Ni_F32 = size;
-        TEST_Nj_F32 = size;
-        TEST_Nk_F32 = size;
-        test_f32();
-    }
+    // vector<int> sizes = {16, 32, 64, 128, 256, 512, 768, 1024, 2048, 4096};
+    vector<int> sizes = {4,5,6,7,8,9,10};
+
+    // cout << "\nfp32" << endl;
+    // for (auto size : sizes) {
+    //     TEST_Ni_F32 = size;
+    //     TEST_Nj_F32 = size;
+    //     TEST_Nk_F32 = size;
+    //     test_f32();
+    // }
 
     cout << "\nfp64" << endl;
     for (auto size : sizes) {
