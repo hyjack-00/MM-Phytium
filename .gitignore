@@ -12,3 +12,4 @@ output
 Makefile_
 build.sh
 run.sh
+/.vs
